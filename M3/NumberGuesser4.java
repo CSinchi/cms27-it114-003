@@ -136,6 +136,42 @@ public class NumberGuesser4 {
                 lose();
                 pickNewRandom = true;
             }
+            else {  //Displays the hint when you didn't lose yet
+                highlowHint(guess);
+                tempStatus(guess);
+            }
+        }
+    }
+
+    //UCID: cms27 10/1/2023
+    private void highlowHint(int guess) //Void method that displays a hint when either the guess is higher or lower than answer (uses a int input to get guess)
+    {
+        if (guess > number){  //if the guess is greater than the answer, display a hint to go lower
+            System.out.println("Try guessing lower");
+        }
+
+        else if (guess < number) { //else, if the guess is less than the answer, display a hint to go higher
+            System.out.println("Try guessing higher");
+        }
+
+    }
+
+    private void tempStatus(int guess)
+    {
+        int coldNum = 12;
+        int warmNum = 6;
+        int hotNum = 3;
+        if (guess >= number-hotNum && guess <= number+hotNum ) {
+            System.out.println("Temperature Status: HOT!!!");
+        }
+        else if (guess >= number-warmNum && guess <= number+warmNum) {
+            System.out.println("Temperature Status: Warm!");
+        }
+        else if(guess >= number-coldNum && guess <= number+coldNum) {
+            System.out.println("Temperature Status: Chilly..");
+        }
+        else{
+            System.out.println("Temperature Status: Cold...");
         }
     }
 
