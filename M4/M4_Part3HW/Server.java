@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class Server {
     int port = 3001;
@@ -81,6 +82,69 @@ public class Server {
                 }
             }
             return true;
+        }
+        //New Command "flipCoin" UCID:cms27 Date: 10/16/2023
+        if(message.equals("flipCoin")) {
+            Random coinGen = new Random(); //Creating Int Generator
+            int coinVal = coinGen.nextInt(2); //Generate Result
+            String coinFace; //String Value to either turns heads or tails
+            String resultMsg; //String Message to be broadcasted
+            if(coinVal == 1){
+                coinFace = "heads"; //becomes heads when generator got 1
+                resultMsg = String.format("has flipped a coin! They landed on %s", coinFace);//formatting results onto string
+                broadcast(resultMsg, clientId);//broadcast that string 
+                return true;//boolean result for this class
+            }
+            else {
+                coinFace = "tails";//becomes tails when generator got 0
+                resultMsg = String.format("has flipped a coin! They landed on %s", coinFace);//formatting results onto string
+                broadcast(resultMsg, clientId);//broadcast that string 
+                return true;//boolean result for this class
+            }   
+        }
+        //New Command "rollDie" UCID:cms27 Date: 10/16/2023
+        if(message.contains("rollDie")){
+            Random dieGen = new Random();
+            int diceAmount; //Amount of dices that will be rolled
+            int dieFaces;//Amount of faces each die has
+            String dieCommand = message.replace("rollDie ", ""); //removes the begining part of the command
+
+            int divider = dieCommand.indexOf("d") -1 ; //int of divider is the position of the "d"
+            if (divider >= 0 ) {  //if divider exists in the command
+                String d1 = dieCommand.substring(0, (divider +1)); //selects everything before d
+                String d2 = dieCommand.substring((divider + 2), dieCommand.length());//selects everything after d
+                diceAmount = Integer.parseInt(d1); //converts  to int
+                //System.out.println(divider); <<-Used for debugging
+                //System.out.println(d1);
+                //System.out.println(d2);
+                dieFaces = Integer.parseInt(d2);// converst to int
+                StringBuilder sb = new StringBuilder(); //creating a StringBuilder to assemble the message
+
+                for(int i = 0; i < diceAmount ; i++) { //Generates and appends results to sb based on "diceAmount"(amount of results) and "dieFaces" (range of results)
+                    int r = dieGen.nextInt(dieFaces) + 1;
+                    sb.append(r);
+                    if (i < diceAmount -1 ) { //seperator for multi result prints
+                        sb.append(", ");
+                    }
+                }
+
+                String resultMsg = String.format("Rolled a %1$s! They got %2$s", dieCommand, sb.toString());//String that assembles the results message 
+                broadcast(resultMsg, clientId);
+                return true; 
+            }
+
+            else {
+                diceAmount = 1; //default value
+                dieFaces = 6; //default value
+                int r = dieGen.nextInt(dieFaces) + 1; //generate value
+                //String that assembles the result message alongside the improber input message
+                String resultMsg = String.format("Rolled a %1$s! That's an Invalid format. Instead They rolled a 1d6 and got %2$s", dieCommand, r);
+                broadcast(resultMsg, clientId);
+                return true;
+            }
+            
+
+
         }
         return false;
     }
