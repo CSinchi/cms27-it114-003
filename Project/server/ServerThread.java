@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import Project.common.Constants;
 import Project.common.Payload;
 import Project.common.PayloadType;
+import Project.common.Phase;
 import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
@@ -80,6 +81,13 @@ public class ServerThread extends Thread {
     }
 
     // send methods
+
+    public boolean sendPhaseSync(Phase phase) { //Added from Ready Check    Cristian Sinchi cms27
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.PHASE);
+        p.setMessage(phase.name());
+        return send(p);
+    }
 
     public boolean sendReadyStatus(long clientId) {
         Payload p = new Payload();
@@ -216,8 +224,13 @@ public class ServerThread extends Thread {
             case JOIN_ROOM:
                 Room.joinRoom(p.getMessage().trim(), this);
                 break;
-            case READY:
-                // ((GameRoom) currentRoom).setReady(myClientId);
+            case READY: //Added from Ready Check    Cristian Sinchi cms27
+                try {
+                ((GameRoom) currentRoom).setReady(this);
+                } catch (Exception e) {
+                logger.severe(String.format("There was a problem during readyCheck %s", e.getMessage()));
+                e.printStackTrace();
+                }
                 break;
             default:
                 break;

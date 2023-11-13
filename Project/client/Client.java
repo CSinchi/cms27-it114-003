@@ -340,7 +340,12 @@ public enum Client {
                     }
                 }
                 break;
-            case RESET_USER_LIST:
+            case READY:
+                    System.out.println(String.format("Player %s is ready", getClientNameById(p.getClientId())));
+                    break;
+            case PHASE: //Added from Ready Set
+                    System.out.println(String.format("The current phase is %s", p.getMessage()));
+            case RESET_USER_LIST: //Added from Ready Set
                 userList.clear();
                 break;
             default:
