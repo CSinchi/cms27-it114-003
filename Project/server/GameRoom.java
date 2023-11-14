@@ -1,9 +1,6 @@
 package Project.server;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+
 
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,14 +13,6 @@ import Project.common.TimedEvent;
 
 public class GameRoom extends Room { //Added parts from Ready Check     Cristian Sinchi cms27
 
-    private final String[] defaultWordArray = {"elevator", "courage", "currency", "manager", "library", "homework"};
-    private final int letterGuessPoint = 1; //Point earned for guessing a letter
-    private int hangManStrikes = 0; 
-
-    private ArrayList<String> currentWordsList = new ArrayList<>(Arrays.asList(defaultWordArray));
-    private int totalRounds; //default amount of rounds usually = length of wordslist
-    
-    private String currentWord;
 
     Phase currentPhase = Phase.READY;
     private static Logger logger = Logger.getLogger(GameRoom.class.getName());
@@ -34,43 +23,6 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         super(name);
         
     }
-
-    private void startGame() {
-
-        //do while loop 
-
-
-    }
-
-    private void gameRound(String word) {
-
-
-    }
-
-
-    private boolean isLetterCorrect(char guess) {
-        char[] currentWordXP = currentWord.toCharArray();
-        for (int i=0; i<currentWordXP.length;i++){
-            if(guess == currentWordXP[i]){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isWordCorrect(String guess) {
-        if (guess == currentWord){
-            return true;
-        }
-        return false;
-    }
-
-    
-    private void shuffleList(ArrayList<String> s){
-        Collections.shuffle(s);
-    }
-
-
 
     @Override
     protected void addClient(ServerThread client) {

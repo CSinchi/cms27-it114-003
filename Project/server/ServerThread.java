@@ -154,7 +154,7 @@ public class ServerThread extends Thread {
         try {
             logger.log(Level.FINE, "Outgoing payload: " + payload);
             out.writeObject(payload);
-            logger.log(Level.INFO, "Sent payload: " + payload);
+            logger.log(Level.INFO, TextFX.colorize("Sent payload: ",Color.GREEN) + payload);
             return true;
         } catch (IOException e) {
             logger.info("Error sending message to client (most likely disconnected)");
@@ -183,17 +183,17 @@ public class ServerThread extends Thread {
                                                                      // likely mean a disconnect)
             ) {
 
-                logger.info("Received from client: " + fromClient);
+                logger.info(TextFX.colorize("Received from client: ", Color.BLUE) + fromClient);
                 processPayload(fromClient);
 
             } // close while loop
         } catch (Exception e) {
             // happens when client disconnects
             e.printStackTrace();
-            logger.info("Client disconnected");
+            logger.info(TextFX.colorize("Client disconnected",Color.BLUE));
         } finally {
             isRunning = false;
-            logger.info("Exited thread loop. Cleaning up connection");
+            logger.info(TextFX.colorize("Exited thread loop. Cleaning up connection",Color.GREEN));
             cleanup();
         }
     }
@@ -240,12 +240,12 @@ public class ServerThread extends Thread {
     }
 
     private void cleanup() {
-        logger.info("Thread cleanup() start");
+        logger.info(TextFX.colorize("Thread cleanup() start", Color.GREEN));
         try {
             client.close();
         } catch (IOException e) {
-            logger.info("Client already closed");
+            logger.info(TextFX.colorize("Client already closed",Color.RED));
         }
-        logger.info("Thread cleanup() complete");
+        logger.info(TextFX.colorize("Thread cleanup() complete",Color.GREEN));
     }
 }

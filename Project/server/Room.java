@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import Project.common.Constants;
+import Project.common.TextFX;
+import Project.common.TextFX.Color;
 
 public class Room implements AutoCloseable {
     // server is a singleton now so we don't need this
@@ -187,7 +189,7 @@ public class Room implements AutoCloseable {
         if (!isRunning) {
             return;
         }
-        logger.info(String.format("Sending message to %s clients", clients.size()));
+        logger.info(String.format(TextFX.colorize("Sending message to %s clients",Color.GREEN), clients.size()));
         if (sender != null && processCommands(message, sender)) {
             // it was a command, don't broadcast
             return;

@@ -15,6 +15,8 @@ import Project.common.Constants;
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.RoomResultPayload;
+import Project.common.TextFX;
+import Project.common.TextFX.Color;
 
 public enum Client {
     Instance;
@@ -59,7 +61,7 @@ public enum Client {
             out = new ObjectOutputStream(server.getOutputStream());
             // channel to listen to server
             in = new ObjectInputStream(server.getInputStream());
-            logger.info("Client connected");
+            logger.info(TextFX.colorize("Client connected",Color.PURPLE));
             listenForServerPayload();
             sendConnect();
         } catch (UnknownHostException e) {
@@ -104,7 +106,7 @@ public enum Client {
             String[] parts = text.split(" ");
             if (parts.length >= 2) {
                 clientName = parts[1].trim();
-                System.out.println("Name set to " + clientName);
+                System.out.println(TextFX.colorize("Name set to " + clientName, Color.PURPLE));
             }
             return true;
         }
@@ -215,13 +217,13 @@ public enum Client {
         inputThread = new Thread() {
             @Override
             public void run() {
-                logger.info("Listening for input");
+                logger.info(TextFX.colorize("Listening for input",Color.BLUE));
                 try (Scanner si = new Scanner(System.in);) {
                     String line = "";
                     isRunning = true;
                     while (isRunning) {
                         try {
-                            logger.info("Waiting for input");
+                            logger.info(TextFX.colorize("Waiting for input",Color.BLUE));
                             line = si.nextLine();
                             if (!processClientCommand(line)) {
                                 if (isConnected()) {
@@ -234,11 +236,11 @@ public enum Client {
                                 }
                             }
                         } catch (Exception e) {
-                            logger.warning("Connection dropped");
+                            logger.warning(TextFX.colorize("Connection dropped",Color.RED));
                             break;
                         }
                     }
-                    logger.info("Exited loop");
+                    logger.info(TextFX.colorize("Exited loop",Color.BLUE));
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -260,7 +262,7 @@ public enum Client {
                     while (isRunning && !server.isClosed() && !server.isInputShutdown()
                             && (fromServer = (Payload) in.readObject()) != null) {
 
-                        logger.info("Debug Info: " + fromServer);
+                        logger.info(TextFX.colorize("Debug Info: ",Color.BLUE) + fromServer);
                         processPayload(fromServer);
 
                     }
@@ -297,7 +299,7 @@ public enum Client {
                 if (!userList.containsKey(p.getClientId())) {
                     userList.put(p.getClientId(), p.getClientName());
                 }
-                System.out.println(String.format("*%s %s*",
+                System.out.println(String.format(TextFX.colorize("*%s %s*", Color.PURPLE),
                         p.getClientName(),
                         p.getMessage()));
                 break;
@@ -318,7 +320,7 @@ public enum Client {
                 }
                 break;
             case MESSAGE:
-                System.out.println(String.format("%s: %s",
+                System.out.println(String.format(TextFX.colorize("%s:",Color.YELLOW) + " %s",
                         getClientNameById(p.getClientId()),
                         p.getMessage()));
                 break;
@@ -331,25 +333,25 @@ public enum Client {
                 break;
             case GET_ROOMS:
                 RoomResultPayload rp = (RoomResultPayload) p;
-                System.out.println("Received Room List:");
+                System.out.println(TextFX.colorize("Received Room List:",Color.GREEN));
                 if (rp.getMessage() != null) {
                     System.out.println(rp.getMessage());
                 } else {
                     for (int i = 0, l = rp.getRooms().length; i < l; i++) {
-                        System.out.println(String.format("%s) %s", (i + 1), rp.getRooms()[i]));
+                        System.out.println(String.format(TextFX.colorize("%s)",Color.GREEN)+TextFX.colorize(" %s", Color.PURPLE), (i + 1), rp.getRooms()[i]));
                     }
                 }
                 break;
             case READY:
-                    System.out.println(String.format("Player %s is ready", getClientNameById(p.getClientId())));
+                    System.out.println(String.format(TextFX.colorize("Player %s is ready",Color.BLUE), getClientNameById(p.getClientId())));
                     break;
             case PHASE: //Added from Ready Set
-                    System.out.println(String.format("The current phase is %s", p.getMessage()));
+                    System.out.println(String.format(TextFX.colorize("The current phase is %s",Color.PURPLE), p.getMessage()));
             case RESET_USER_LIST: //Added from Ready Set
                 userList.clear();
                 break;
             default:
-                logger.warning(String.format("Unhandled Payload type: %s", p.getPayloadType()));
+                logger.warning(String.format(TextFX.colorize("Unhandled Payload type: %s",Color.RED), p.getPayloadType()));
                 break;
 
         }
