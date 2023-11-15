@@ -89,9 +89,15 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
-    public boolean sendReadyStatus(long clientId) {
+    public boolean sendReadyStatus(long clientId) { //Added from Ready Check    Cristian Sinchi cms27
         Payload p = new Payload();
         p.setPayloadType(PayloadType.READY);
+        p.setClientId(clientId);
+        return send(p);
+    }
+    public boolean sendCurrentTurn(long clientId) { //Added from Duengon Project    Cristian Sinchi cms27
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.TURN);
         p.setClientId(clientId);
         return send(p);
     }
@@ -224,6 +230,14 @@ public class ServerThread extends Thread {
             case JOIN_ROOM:
                 Room.joinRoom(p.getMessage().trim(), this);
                 break;
+            case GUESS_LETTER:
+                ((GameRoom) currentRoom).handleguessLetter(p.getMessage().trim(), this);
+                break;
+            case GUESS_WORD:
+                //GameRoom.guessWord(p.getMessage().trim(), this);
+                break;
+            case SKIP:
+                ((GameRoom) currentRoom).handleSkip(this);
             case READY: //Added from Ready Check    Cristian Sinchi cms27
                 try {
                 ((GameRoom) currentRoom).setReady(this);

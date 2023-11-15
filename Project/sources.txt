@@ -1,6 +1,5 @@
 ./client/Client.java
 ./common/Constants.java
-./common/HangmanGame.java
 ./common/Payload.java
 ./common/PayloadType.java
 ./common/Phase.java
@@ -9,6 +8,7 @@
 ./common/TextFX.java
 ./common/TimedEvent.java
 ./server/GameRoom.java
+./server/HangmanGame.java
 ./server/Room.java
 ./server/Server.java
 ./server/ServerPlayer.java

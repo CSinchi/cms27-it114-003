@@ -159,6 +159,7 @@ public enum Client {
             return true;
         }else if (text.startsWith("/guessword")){
             String guessWord = text.replace("/guessword", "").trim();
+            guessWord.substring(0,1);
             sendGuessWord(guessWord);
             return true;
         }else if (text.equalsIgnoreCase("/users")) {
@@ -174,8 +175,10 @@ public enum Client {
             return true;
         }else if(text.equalsIgnoreCase("/ready")){
             sendReadyStatus();
+            return true;
         }else if(text.equalsIgnoreCase("/skip")){
             //sendSkip();
+            return true;
         }
         return false;
     }
@@ -391,6 +394,7 @@ public enum Client {
                     break;
             case PHASE: //Added from Ready Set
                     System.out.println(String.format(TextFX.colorize("The current phase is %s",Color.PURPLE), p.getMessage()));
+                    break;
             case RESET_USER_LIST: //Added from Ready Set
                 userList.clear();
                 break;

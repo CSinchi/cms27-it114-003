@@ -1,5 +1,6 @@
 package Project.common;
 
+import Project.server.HangmanGame;
 
 public abstract class Constants {
     public static final long DEFAULT_CLIENT_ID = -1L;
@@ -7,5 +8,7 @@ public abstract class Constants {
     public static final String LOBBY = "lobby";
 
     public static final int HANGMAN_DEFAULT_SCORE = 1; //Constants for Hangman Game object      Cristian Sinchi cms27
+    public static final int HANGMAN_MAX_SCORE = 15;
+    public static final int HANGMAN_MAX_STRIKES = 6;
     public static final String[] HANGMAN_DEFAULT_WORDLIST = {"elevator", "courage", "currency", "manager", "library", "homework"};
 }

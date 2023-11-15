@@ -1,4 +1,4 @@
-package Project.common;
+package Project.server;
 
 //Cristian Sinchi cms27
 
@@ -12,6 +12,7 @@ import Project.common.Constants;
 public class HangmanGame {
 
     private ArrayList<String> WordsList = new ArrayList<>(Arrays.asList(Constants.HANGMAN_DEFAULT_WORDLIST));//setting up modifiable word list
+    private Iterator<String> currentWordListIter;
     private String currentWord; //stores current word to be guessed
     private int lettersGuessedInt; //stores the amount of letters guess in a word (in total)
     private char[] blankCurrentWordArr; //stores an array of blanks that can get filled in and be getted (be string)
@@ -21,9 +22,9 @@ public class HangmanGame {
     private int hangManStrikes; //default strikes should always begin with zero
  
     private boolean isGameRunning = false; //boolean if game is running
-    private boolean isGameCompleted = false; //boolean if game is completed
+    private boolean isGameCompleted = false;
+
     private boolean isGuessRight = false; //boolean if a guess was correct
-    private String prevGameState;
     
 
     public HangmanGame() {
@@ -32,38 +33,18 @@ public class HangmanGame {
 
     protected void startGame(){ // Startup method for this code. Gameroom should be able to run this object in its class
         isGameRunning = true; // Resetting/Setting game data
-        isGameCompleted = false;
-        prevGameState = "none";
         currentRound = 1;
-        totalRounds = WordsList.size();
         shuffleList(WordsList);
-        for(int i = 0; i < totalRounds; i++ ){  //Runs serveral rounds based on totalRounds' value
-            gameRound(WordsList.get(i)); //start new round with current element string from wordlist
-            currentRound++; //when gameRound breaks, set the next round int
-            if(isGameCompleted) { //game will stop when the isGameCompleted condition is true
-                break;
-            }
-        }
-        isGameRunning = false; //game no longer is running
-    }
+        currentWordListIter = WordsList.iterator();
+        //gameRound(WordsList.get(currentRound - 1)); //start new round with current element string from wordlist
 
-    private void gameRound(String word){ //Starts up game round. Can only be runned by startGame()
-        currentWord = word; //update word to be guessed
-        blankCurrentWordArr = createBlankArr(); //generate blank word
-        hangManStrikes = 0;  //reset strikes
-
-        while(true) {  //will keep going until one of the bools below is true;
-            if(isGuessRight && lettersGuessedInt >= currentWord.length()) { //Complete Win (also check if all letters has been guessed)
-                prevGameState = "win";
-                break;
-            }
-            if(hangManStrikes >= 5){
-                prevGameState = "loss"; //Hanged Man Loss
-                break;
-            }
         }
 
-
+    private void setGameRound(Iterator<String> iterator) {  //Sets up game round. Can only be runned by startGame() recursive
+        if(iterator.hasNext())
+            currentWord = iterator.next();
+            createBlankArr();
+        
     }
 
     private void shuffleList(ArrayList<String> s){ //method to shuffle an ArrayList<String> in this case the word list order
@@ -87,14 +68,6 @@ public class HangmanGame {
                 blankArr[i] = g;
             }
         }
-    }
-
-    protected String getBlankStr() { //returns a string of the current blank current word array
-        StringBuilder sb = new StringBuilder(32);
-        for(int i = 0; i < blankCurrentWordArr.length; i++){
-            sb.append(blankCurrentWordArr[i] + " ");
-        }
-        return sb.toString().trim();
     }
 
     //Guesses methods
@@ -149,6 +122,36 @@ public class HangmanGame {
             return amount;
         }
     }
+
+    //game booleans
+
+    protected boolean isHangmanCompleted (){
+        if (hangManStrikes >= Constants.HANGMAN_MAX_STRIKES){
+            return true;
+        }
+        return false;
+    }
+
+    
+
+    //getters
+
+    protected int getCurrentRound() {
+        return currentRound;
+    }
+
+    protected boolean getIsGameCompleted() {
+        return isGameCompleted;
+    }
+
+    protected String getBlankStr() { //returns a string of the current blank current word array
+        StringBuilder sb = new StringBuilder(32);
+        for(int i = 0; i < blankCurrentWordArr.length; i++){
+            sb.append(blankCurrentWordArr[i] + " ");
+        }
+        return sb.toString().trim();
+    }
+
 
     
 
