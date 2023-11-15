@@ -1,15 +1,17 @@
 package Project.server;
 
-
-
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.logging.Logger;
 
+import org.w3c.dom.Text;
+
 import Project.common.Constants;
 import Project.common.Phase;
+import Project.common.TextFX;
 import Project.common.TimedEvent;
+import Project.common.TextFX.Color;
 
 public class GameRoom extends Room { //Added parts from Ready Check     Cristian Sinchi cms27
 
@@ -26,22 +28,23 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     @Override
     protected void addClient(ServerThread client) {
-        logger.info("Adding client as player");
+        logger.info(TextFX.colorize("Adding client as player",Color.BLUE));
         players.computeIfAbsent(client.getClientId(), id -> {
             ServerPlayer player = new ServerPlayer(client);
             super.addClient(client);
-            logger.info(String.format("Total clients %s", clients.size()));// change visibility to protected
+            logger.info(String.format(TextFX.colorize("Total clients %s",Color.BLUE), clients.size()));// change visibility to protected
             return player;
         });
     }
 
     protected void setReady(ServerThread client) {
-        logger.info("Ready check triggered");
+        logger.info(TextFX.colorize("Ready check triggered", Color.PURPLE));
         if (currentPhase != Phase.READY) {
             logger.warning(String.format("readyCheck() incorrect phase: %s", Phase.READY.name()));
             return;
         }
         if (readyTimer == null) {
+            logger.info(String.format(TextFX.colorize("%s Started Timer", Color.PURPLE),client.getClientName()));
             sendMessage(null, "Ready Check Initiated, 30 seconds to join");
             readyTimer = new TimedEvent(30, () -> {
                 readyTimer = null;
@@ -49,22 +52,22 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             });
         }
         // Hashmaps allow fast lookup by keys
-        if(players.containsKey(client.getClientId())){
+        /*if(players.containsKey(client.getClientId())){
             ServerPlayer sp = players.get(client.getClientId());
             sp.setReady(true);
             logger.info(String.format("Marked player %s[%s] as ready", sp.getClient().getClientName(), sp
                             .getClient().getClientId()));
                     syncReadyStatus(sp.getClient().getClientId());
-        }
-        /* Example demonstrating stream api and filters (not ideal in this scenario since a hashmap has a more officient approach) 
-        * This concept may be beneficial in the future for other lookup data
+        } */
+        //Example demonstrating stream api and filters (not ideal in this scenario since a hashmap has a more officient approach) 
+        //This concept may be beneficial in the future for other lookup data
         players.values().stream().filter(p -> p.getClient().getClientId() == client.getClientId()).findFirst()
                 .ifPresent(p -> {
                     p.setReady(true);
                     logger.info(String.format("Marked player %s[%s] as ready", p.getClient().getClientName(), p
                             .getClient().getClientId()));
                     syncReadyStatus(p.getClient().getClientId());
-                });*/
+                });
         readyCheck(false);
     }
 
@@ -99,10 +102,10 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     }
 
     private void start() {
-        updatePhase(Phase.SELECTION);
+        updatePhase(Phase.IN_PROGRESS);
         // TODO example
         sendMessage(null, "Session started");
-        new TimedEvent(30, () -> resetSession())
+        new TimedEvent(5, () -> resetSession())
                 .setTickCallback((time) -> {
                     sendMessage(null, String.format("Example running session, time remaining: %s", time));
                 });
@@ -134,7 +137,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     protected void handleDisconnect(ServerPlayer player) {
         if (players.containsKey(player.getClient().getClientId())) {
             players.remove(player.getClient().getClientId());
-            super.handleDisconnect(null, player.getClient()); // change visibility to protected
+            super.handleDisconnect(null, player.getClient()); 
             logger.info(String.format("Total clients %s", clients.size()));
             sendMessage(null, player.getClient().getClientName() + " disconnected");
             if (players.isEmpty()) {

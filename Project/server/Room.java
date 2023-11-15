@@ -220,10 +220,23 @@ public class Room implements AutoCloseable {
     }
 
     protected void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
-        iter.remove();
+        if (iter != null) {
+            iter.remove();
+        }
+        else {
+            Iterator<ServerThread> iter2 = clients.iterator();
+            while (iter2.hasNext()) {
+                ServerThread th = iter2.next();
+                if (th.getClientId() == client.getClientId()) {
+                    iter2.remove();
+                    break;
+                }
+            }
+
         logger.info(String.format("Removed client %s", client.getClientName()));
         sendMessage(null, client.getClientName() + " disconnected");
-        checkClients();
+        checkClients(); 
+        }
     }
 
     public void close() {

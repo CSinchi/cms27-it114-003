@@ -153,7 +153,15 @@ public enum Client {
             String query = text.replace("/rooms", "").trim();
             sendListRooms(query);
             return true;
-        } else if (text.equalsIgnoreCase("/users")) {
+        } else if (text.startsWith("/guessletter")){ //comand to send a letter guess
+            String guess = text.replace("/guessword","").trim();
+            sendGuessLetter(guess);
+            return true;
+        }else if (text.startsWith("/guessword")){
+            String guessWord = text.replace("/guessword", "").trim();
+            sendGuessWord(guessWord);
+            return true;
+        }else if (text.equalsIgnoreCase("/users")) {
             Iterator<Entry<Long, String>> iter = userList.entrySet().iterator();
             System.out.println("Listing Local User List:");
             if (userList.size() == 0) {
@@ -164,11 +172,21 @@ public enum Client {
                 System.out.println(String.format("%s[%s]", user.getValue(), user.getKey()));
             }
             return true;
+        }else if(text.equalsIgnoreCase("/ready")){
+            sendReadyStatus();
+        }else if(text.equalsIgnoreCase("/skip")){
+            //sendSkip();
         }
         return false;
     }
 
     // Send methods
+
+    protected void sendReadyStatus() throws IOException { //added from ready check Cristian Sinchi cms27
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.READY);
+        out.writeObject(p);
+    }
     protected void sendListRooms(String query) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.GET_ROOMS);
@@ -202,6 +220,32 @@ public enum Client {
         p.setClientName(clientName);
         out.writeObject(p);
     }
+
+    //  Send Game Related Payloads Begin
+
+    protected void sendGuessLetter(String guess) throws IOException { //client method to send guess letter payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.GUESS_LETTER);
+        p.setMessage(guess);
+        p.setClientName(clientName);
+        out.writeObject(p);
+    }
+
+    protected void sendGuessWord(String guess) throws IOException { //client method to send guess word payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.GUESS_WORD);
+        p.setClientName(clientName);
+        p.setMessage(guess);
+        out.writeObject(p);
+    }
+
+    protected void sendSkipStatus() throws IOException { //client method to send skip payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.SKIP);
+        out.writeObject(p);
+    }
+
+    //  Send Game Related Payloads End
 
     protected void sendMessage(String message) throws IOException {
         Payload p = new Payload();
@@ -310,7 +354,7 @@ public enum Client {
                 if (p.getClientId() == myClientId) {
                     myClientId = Constants.DEFAULT_CLIENT_ID;
                 }
-                System.out.println(String.format("*%s %s*",
+                System.out.println(String.format(TextFX.colorize("*%s %s*",Color.RED),
                         p.getClientName(),
                         p.getMessage()));
                 break;
@@ -342,7 +386,7 @@ public enum Client {
                     }
                 }
                 break;
-            case READY:
+            case READY: //Added from Ready Set
                     System.out.println(String.format(TextFX.colorize("Player %s is ready",Color.BLUE), getClientNameById(p.getClientId())));
                     break;
             case PHASE: //Added from Ready Set

@@ -21,8 +21,9 @@ public class HangmanGame {
     private int hangManStrikes; //default strikes should always begin with zero
  
     private boolean isGameRunning = false; //boolean if game is running
-    private boolean isWinAchived = false; //boolean if someone won the game
+    private boolean isGameCompleted = false; //boolean if game is completed
     private boolean isGuessRight = false; //boolean if a guess was correct
+    private String prevGameState;
     
 
     public HangmanGame() {
@@ -31,13 +32,19 @@ public class HangmanGame {
 
     protected void startGame(){ // Startup method for this code. Gameroom should be able to run this object in its class
         isGameRunning = true; // Resetting/Setting game data
+        isGameCompleted = false;
+        prevGameState = "none";
         currentRound = 1;
         totalRounds = WordsList.size();
         shuffleList(WordsList);
         for(int i = 0; i < totalRounds; i++ ){  //Runs serveral rounds based on totalRounds' value
-            gameRound(WordsList.get(i));
-            currentRound++;
+            gameRound(WordsList.get(i)); //start new round with current element string from wordlist
+            currentRound++; //when gameRound breaks, set the next round int
+            if(isGameCompleted) { //game will stop when the isGameCompleted condition is true
+                break;
+            }
         }
+        isGameRunning = false; //game no longer is running
     }
 
     private void gameRound(String word){ //Starts up game round. Can only be runned by startGame()
@@ -46,10 +53,12 @@ public class HangmanGame {
         hangManStrikes = 0;  //reset strikes
 
         while(true) {  //will keep going until one of the bools below is true;
-            if(isGuessRight && lettersGuessedInt >= currentWord.length()) { //Complete Win
+            if(isGuessRight && lettersGuessedInt >= currentWord.length()) { //Complete Win (also check if all letters has been guessed)
+                prevGameState = "win";
                 break;
             }
-            if(hangManStrikes >= 5){ //Hanged Man Loss
+            if(hangManStrikes >= 5){
+                prevGameState = "loss"; //Hanged Man Loss
                 break;
             }
         }
@@ -60,6 +69,8 @@ public class HangmanGame {
     private void shuffleList(ArrayList<String> s){ //method to shuffle an ArrayList<String> in this case the word list order
         Collections.shuffle(s);
     }
+
+    //Blank array methods
 
     private char[] createBlankArr() {  //creates a char array with the size of the current word's length with underscores each element
         char[] blank = new char[currentWord.length()];
@@ -77,6 +88,16 @@ public class HangmanGame {
             }
         }
     }
+
+    protected String getBlankStr() { //returns a string of the current blank current word array
+        StringBuilder sb = new StringBuilder(32);
+        for(int i = 0; i < blankCurrentWordArr.length; i++){
+            sb.append(blankCurrentWordArr[i] + " ");
+        }
+        return sb.toString().trim();
+    }
+
+    //Guesses methods
 
     protected boolean isLetterCorrect(char guess) { //Returns true if letter guess was right and vice versa. Other classes should be able to use this method
         char[] explodedCurrentWord = currentWord.toCharArray();
@@ -102,7 +123,7 @@ public class HangmanGame {
         return false;
     }
     
-    protected int guessedLettersScore(char guess){
+    protected int guessedLettersScore(char guess){ //return the score the player earned. Also modifies guessed word int (Must use with isLetterCorrect)
         char[] explodedCurrentWord = currentWord.toCharArray();
         int amount = 0;
         for (int i = 0; i < explodedCurrentWord.length; i++){
@@ -110,25 +131,26 @@ public class HangmanGame {
                 amount++;
             }
         }
-        lettersGuessedInt += amount;
+        lettersGuessedInt += amount; //Adds amount of letters guess to lettersInt
         return amount*Constants.HANGMAN_DEFAULT_SCORE;
     }
 
-    protected int guessedWordScore(String guess) {
+    protected int guessedWordScore(String guess) { //return the score the player earned. Also fills guessed word int(auto winround) (Must use with isWordCorrect)
+        int amount = 0;
         if(guess == currentWord){
-            lettersGuessedInt = currentWord.length();
-            return currentWord.length() * Constants.HANGMAN_DEFAULT_SCORE;
+            for(int i = 0; i < blankCurrentWordArr.length; i++) {//score is based on how many blanks were remaining (more blanks = more points)
+                if (blankCurrentWordArr[i] == '_'){
+                    amount++;
+                }
+            }
+            return amount * Constants.HANGMAN_DEFAULT_SCORE;
         }
-        return 0;
+        else {
+            return amount;
+        }
     }
 
-    protected String getBlankStr() {
-        StringBuilder sb = new StringBuilder(32);
-        for(int i = 0; i < blankCurrentWordArr.length; i++){
-            sb.append(blankCurrentWordArr[i] + " ");
-        }
-        return sb.toString().trim();
-    }
+    
 
     
 }

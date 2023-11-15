@@ -1,5 +1,6 @@
 ./client/Client.java
 ./common/Constants.java
+./common/HangmanGame.java
 ./common/Payload.java
 ./common/PayloadType.java
 ./common/Phase.java
