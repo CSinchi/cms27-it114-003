@@ -14,36 +14,34 @@ public class HangmanGame {
     private ArrayList<String> WordsList = new ArrayList<>(Arrays.asList(Constants.HANGMAN_DEFAULT_WORDLIST));//setting up modifiable word list
     private Iterator<String> currentWordListIter;
     private String currentWord; //stores current word to be guessed
-    private int lettersGuessedInt; //stores the amount of letters guess in a word (in total)
     private char[] blankCurrentWordArr; //stores an array of blanks that can get filled in and be getted (be string)
     
-    private int totalRounds; //default amount of rounds usually = length of wordslist
     private int currentRound; //stores current round number
     private int hangManStrikes; //default strikes should always begin with zero
  
     private boolean isGameRunning = false; //boolean if game is running
     private boolean isGameCompleted = false;
-
-    private boolean isGuessRight = false; //boolean if a guess was correct
-    
+    private boolean isRoundFinished;    
 
     public HangmanGame() {
-
-    }
-
-    protected void startGame(){ // Startup method for this code. Gameroom should be able to run this object in its class
         isGameRunning = true; // Resetting/Setting game data
         currentRound = 1;
         shuffleList(WordsList);
         currentWordListIter = WordsList.iterator();
-        //gameRound(WordsList.get(currentRound - 1)); //start new round with current element string from wordlist
+        setGameRound(currentWordListIter);
 
-        }
+    }
 
-    private void setGameRound(Iterator<String> iterator) {  //Sets up game round. Can only be runned by startGame() recursive
-        if(iterator.hasNext())
+    private void setGameRound(Iterator<String> iterator) {  //Sets up game round.
+        if(iterator.hasNext()){
+            hangManStrikes = 0;
             currentWord = iterator.next();
-            createBlankArr();
+            blankCurrentWordArr = createBlankArr();//sets up blank current word arr
+            isRoundFinished = false;
+        }
+        else{
+            isGameCompleted = true;
+        }
         
     }
 
@@ -76,27 +74,23 @@ public class HangmanGame {
         char[] explodedCurrentWord = currentWord.toCharArray();
         for (int i = 0; i < explodedCurrentWord.length; i++ ){
             if(guess == explodedCurrentWord[i]){
-                isGuessRight = true; //change state
                 fillBlankArr(blankCurrentWordArr, guess); //fills in the letters in the blank word
                 return true;
             }
         }
         hangManStrikes++;
-        isGuessRight = false;
         return false;
     }
 
     protected boolean isWordCorrect(String guess) { //Returns true if word guess was right and vice versa. Other classes should be able to use this method
-        if (guess == currentWord){
-            isGuessRight = true;
+        if (guess.equals(currentWord)) {
             return true;
         }
         hangManStrikes++;
-        isGuessRight = false;
         return false;
     }
     
-    protected int guessedLettersScore(char guess){ //return the score the player earned. Also modifies guessed word int (Must use with isLetterCorrect)
+    protected int guessedLettersScore(char guess){ //return the score the player earned. Also modifies guessed word int (Must use with isLetterCorrect in GameRoom)
         char[] explodedCurrentWord = currentWord.toCharArray();
         int amount = 0;
         for (int i = 0; i < explodedCurrentWord.length; i++){
@@ -104,35 +98,47 @@ public class HangmanGame {
                 amount++;
             }
         }
-        lettersGuessedInt += amount; //Adds amount of letters guess to lettersInt
         return amount*Constants.HANGMAN_DEFAULT_SCORE;
     }
 
-    protected int guessedWordScore(String guess) { //return the score the player earned. Also fills guessed word int(auto winround) (Must use with isWordCorrect)
+    protected int guessedWordScore(String guess) { //return the score the player earned (Must use with isWordCorrect in GameRoom)
         int amount = 0;
-        if(guess == currentWord){
-            for(int i = 0; i < blankCurrentWordArr.length; i++) {//score is based on how many blanks were remaining (more blanks = more points)
-                if (blankCurrentWordArr[i] == '_'){
-                    amount++;
-                }
+        for(int i = 0; i < blankCurrentWordArr.length; i++) {//score is based on how many blanks were remaining (more blanks = more points)
+            if (blankCurrentWordArr[i] == '_'){
+                amount++;
             }
-            return amount * Constants.HANGMAN_DEFAULT_SCORE;
         }
-        else {
-            return amount;
-        }
+        blankCurrentWordArr = guess.toCharArray();//fills up the blank word when done
+        return amount * Constants.HANGMAN_DEFAULT_SCORE;
     }
 
     //game booleans
 
     protected boolean isHangmanCompleted (){
         if (hangManStrikes >= Constants.HANGMAN_MAX_STRIKES){
+            isRoundFinished = true;
             return true;
         }
         return false;
     }
 
-    
+    protected boolean isBlankCompleted() {
+        for (int i = 0; i < blankCurrentWordArr.length; i++){
+            if (blankCurrentWordArr[i] == '_'){
+                return false;
+            }
+        }
+        isRoundFinished = true;
+        return true;
+    }
+    protected boolean canGoToNextRound(){ //dependant on hangmancompleted and isBlankCompleted
+        if(isRoundFinished){
+            currentRound++;
+            setGameRound(currentWordListIter);
+            return true;
+        }
+        return false;
+    }
 
     //getters
 
@@ -140,8 +146,16 @@ public class HangmanGame {
         return currentRound;
     }
 
+    protected int getHangmanStrikes(){
+        return hangManStrikes;
+    }
+
     protected boolean getIsGameCompleted() {
         return isGameCompleted;
+    }
+
+    protected String getCurrentWord() {
+        return currentWord;
     }
 
     protected String getBlankStr() { //returns a string of the current blank current word array
@@ -151,6 +165,7 @@ public class HangmanGame {
         }
         return sb.toString().trim();
     }
+
 
 
     

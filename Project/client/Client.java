@@ -154,12 +154,13 @@ public enum Client {
             sendListRooms(query);
             return true;
         } else if (text.startsWith("/guessletter")){ //comand to send a letter guess
-            String guess = text.replace("/guessword","").trim();
+            String guess = text.replace("/guessletter","").trim();
+            guess.substring(0,1);
             sendGuessLetter(guess);
             return true;
         }else if (text.startsWith("/guessword")){
             String guessWord = text.replace("/guessword", "").trim();
-            guessWord.substring(0,1);
+            
             sendGuessWord(guessWord);
             return true;
         }else if (text.equalsIgnoreCase("/users")) {
@@ -177,7 +178,7 @@ public enum Client {
             sendReadyStatus();
             return true;
         }else if(text.equalsIgnoreCase("/skip")){
-            //sendSkip();
+            sendSkipStatus();
             return true;
         }
         return false;
@@ -394,6 +395,9 @@ public enum Client {
                     break;
             case PHASE: //Added from Ready Set
                     System.out.println(String.format(TextFX.colorize("The current phase is %s",Color.PURPLE), p.getMessage()));
+                    break;
+            case TURN:
+                    System.out.println(String.format(TextFX.colorize("Current Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
                     break;
             case RESET_USER_LIST: //Added from Ready Set
                 userList.clear();

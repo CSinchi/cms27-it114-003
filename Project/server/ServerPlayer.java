@@ -15,12 +15,16 @@ public class ServerPlayer extends Player {
         return this.client;
     }
 
-    public void setScore (int score) {
+    public void setScore (int score) { //new data for serverplayer scores
         this.score = score;
     }
 
     public int getScore() {
         return score;
+    }
+
+    public void addScore (int score) { 
+        this.score += score;
     }
 
     public ServerPlayer(ServerThread client) {

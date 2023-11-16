@@ -1,6 +1,7 @@
 package Project.server;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.Text;
 
 import Project.common.Constants;
+import Project.common.Payload;
 import Project.common.Phase;
 import Project.common.TextFX;
 import Project.common.TimedEvent;
@@ -23,6 +25,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     private TimedEvent readyTimer = null; //Is used outside of readys
     private ConcurrentHashMap<Long, ServerPlayer> players = new ConcurrentHashMap<Long, ServerPlayer>();
     private HangmanGame game;
+    private boolean isGameRunning;
 
     private ServerPlayer currentTurnPlayer = null;
     private List<ServerPlayer> turnOrder = new ArrayList<ServerPlayer>();
@@ -107,17 +110,18 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                 .setTickCallback((time) -> {
                     sendMessage(null, String.format("Example running session, time remaining: %s", time));
                 }); */
-        Boolean isGameCompleted = false;
         turnOrder = players.values().stream().filter(ServerPlayer::isReady).toList(); //initalize turnOrderList
-        game = new HangmanGame();
         logger.info(TextFX.colorize("Game Initializing", Color.PURPLE));
+        game = new HangmanGame();
         sendMessage(null, "Started Hangman Game");
+        announceRound();
         nextTurn();
         
         }
 
     private synchronized void resetSession() {
         players.values().stream().forEach(p -> p.setReady(false));
+        players.values().stream().forEach(p -> p.setScore(0)); //addition to resetSession to also clear out players data when called
         updatePhase(Phase.READY);
         sendMessage(null, "Session ended, please intiate ready check to begin a new one");
     }
@@ -139,7 +143,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
-    protected void handleDisconnect(ServerPlayer player) { //temp use this for guess vaildation
+    protected void handleDisconnect(ServerPlayer player) { 
         if (players.containsKey(player.getClient().getClientId())) {
             players.remove(player.getClient().getClientId());
             super.handleDisconnect(null, player.getClient()); 
@@ -162,6 +166,11 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
+    protected void announceRound() {
+        logger.info(String.format(TextFX.colorize("This Round [%d] word is %s",Color.PURPLE),game.getCurrentRound(),game.getCurrentWord()));
+        sendMessage(null, "Round " + game.getCurrentRound() + " Blank Word: " + game.getBlankStr());
+    }
+
     //Serverplayer methods
 
     private ServerPlayer findPlayer (ServerThread client){
@@ -176,35 +185,93 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         return null;
     }
 
-    private void scorePlayer(ServerPlayer player, int score) {
+    private void scorePlayer(ServerPlayer player, int score) {  
+        player.addScore(score);
+        logger.info(String.format(TextFX.colorize("%s scored %d points", Color.PURPLE),player.getClient().getClientName(), score));
+        sendMessage(null, String.format("%s scored %d points!",player.getClient().getClientName(), score));
+        //sendMessage(null, String.format("&s's total score is %d points", player.getClient().getClientName(), player.getScore()));
+      }
+
+    private void displayPlayersScoreRanked(List<ServerPlayer> players){
+        List<ServerPlayer> rankedList = new ArrayList<>(players);
+        rankedList.sort(Comparator.comparing(ServerPlayer::getScore).reversed());
+        StringBuilder sb = new StringBuilder(100);
+        Iterator<ServerPlayer> iter = rankedList.iterator();
+        int rankNum = 1;
+        while(iter.hasNext()){
+            sb.append(" ");
+            ServerPlayer player = iter.next();
+            String s = String.format("[%d] %s-%d", rankNum, player.getClient().getClientName(),player.getScore());
+            sb.append(s);
+
+        }
+        sendMessage(null, "Score Rankings:"+ sb);
 
     }
 
     //guessing handling methods
 
-    protected void handleguessLetter(String guess, ServerThread client) {
+    protected void handleGuessLetter(String guess, ServerThread client) {
         if(client.getClientId() != currentTurnPlayer.getClient().getClientId()){
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "It is not your turn yet");
             return;
         }
         char letter = guess.charAt(0);
-        //if() char is not a letter
-        sendMessage(null, client.getClientName() + "  the letter " + guess); 
+
+        sendMessage(null, client.getClientName() + " guessed the letter " + guess); 
         if (game.isLetterCorrect(letter)){
             cancelReadyTimer();
             sendMessage(null, client.getClientName() + " got the letter right!");
             scorePlayer(currentTurnPlayer, game.guessedLettersScore(letter));
-            checkIsGameWon(); //checks if the max score has been achieved
-            sendMessage(null, "New Blanks: " + game.getBlankStr());
-            nextTurn();
-        }
+                if (!checkIsPlayerWon()) {//checks if the max score win condition has been achieved
+                sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients
+                checkIsRoundCompleted(); //goes to next round if applicable (blank word is completed)
+                    if(!checkIsGameCompleted()){
+                        nextTurn();
+                    } 
+                }
+            }
         else{
             cancelReadyTimer();
             sendMessage(null, client.getClientName() + " got the letter wrong!");
-            nextTurn();
+            sendMessage(null, "Strikes:" + game.getHangmanStrikes());
+            sendMessage(null, "Blank Word: " + game.getBlankStr());
+            checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
+            if(!checkIsGameCompleted()){
+                nextTurn();
+            }
         }
+    }
 
+    protected void handleGuessWord(String guess, ServerThread client) {
+        if(client.getClientId() != currentTurnPlayer.getClient().getClientId()){
+            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "It is not your turn yet");
+            return;
+        }
+        sendMessage(null, client.getClientName() + " guessd the word " + guess);
+        if (game.isWordCorrect(guess)){
+            cancelReadyTimer();
+            sendMessage(null, client.getClientName() + " got the word right!");
+            scorePlayer(currentTurnPlayer, game.guessedWordScore(guess));
+                if(!checkIsPlayerWon()){
+                    sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients
+                    checkIsRoundCompleted();
+                    if(!checkIsGameCompleted()){//will go to next turn until win condition is set true
+                        nextTurn();
+                    }
+                }  
+        }   
 
+        else {
+            cancelReadyTimer();
+            sendMessage(null, client.getClientName() + " got the word wrong!");
+            sendMessage(null, "Strikes:" + game.getHangmanStrikes());
+            sendMessage(null, "Blank Word: " + game.getBlankStr());
+            checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
+            if(!checkIsGameCompleted()){ //will go to next turn until win condition is set true
+                nextTurn();
+            }
+        }
     }
 
     protected void handleSkip(ServerThread client) {
@@ -215,6 +282,23 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         sendMessage(null,client.getClientName()+" skipped thier turned!");
         nextTurn();
     }
+
+     public boolean hasLetters (String str, ServerThread client) {
+        if (str == ""){
+            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot send blanks");
+            return false;
+        }
+        char[] explodedString = str.toCharArray();
+        for (int i = 0; i < explodedString.length; i++){
+            if(!Character.isLetter(explodedString[i])){
+                client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot send numbers or speical characters");
+                return false;
+            }
+        }
+        return true;
+        
+    }
+
 
     //turn methods from Duengon Project    Cristain Sinchi cms27
 
@@ -263,23 +347,56 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     //void check methods for complete win, win round, or lose round
 
-    private void checkIsGameWon() {
+    private boolean checkIsPlayerWon() {
         Iterator<ServerPlayer> iter = players.values().stream().iterator();
         while (iter.hasNext()) {
             ServerPlayer player = iter.next();
             if(player.getScore() >= Constants.HANGMAN_MAX_SCORE) {
                 cancelReadyTimer();
                 ServerPlayer winningPlayer = getHighScorePlayer(turnOrder);
-                sendMessage(null,winningPlayer.getClient().getClientName() + " won the game with the max score of" +winningPlayer.getScore());
+                sendMessage(null,winningPlayer.getClient().getClientName() + " won the game with the max score of " + winningPlayer.getScore());
                 resetSession();
+                return true;
             }
-        }     
+        }
+        return false;     
+    }
+
+    private boolean checkIsGameCompleted() {
+        if(game.getIsGameCompleted()){
+            ServerPlayer winningPlayer = getHighScorePlayer(turnOrder);
+            sendMessage(null, "Game Ended " + winningPlayer.getClient().getClientName() + " won with a score of " + winningPlayer.getScore());
+            resetSession();
+            return true;
+        }
+        return false;
+    }
+
+    private void checkIsRoundCompleted() {
+        if(game.isBlankCompleted()){
+            sendMessage(null, "Blank Word Solved! The word was " + game.getCurrentWord());
+            displayPlayersScoreRanked(turnOrder);
+            if(!checkIsGameCompleted()); {
+                if(game.canGoToNextRound()){
+                announceRound();
+                }
+            }
+        }
+        if(game.isHangmanCompleted()){
+            sendMessage(null, "Hangman Completed.... The word was " + game.getCurrentWord());
+            displayPlayersScoreRanked(turnOrder);
+            if(!checkIsGameCompleted()){
+                if(game.canGoToNextRound()) {
+                    announceRound();
+                }
+            }   
+        }
     }
 
     //getters
 
     private ServerPlayer getHighScorePlayer(List<ServerPlayer> players) {
-        Iterator<ServerPlayer> iter = this.players.values().stream().iterator();
+        Iterator<ServerPlayer> iter = players.iterator();
         ServerPlayer highestScorePlayer = null;
     
         while (iter.hasNext()) {
