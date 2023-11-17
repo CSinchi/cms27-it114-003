@@ -12,24 +12,23 @@ import Project.common.Constants;
 public class HangmanGame {
 
     private ArrayList<String> WordsList = new ArrayList<>(Arrays.asList(Constants.HANGMAN_DEFAULT_WORDLIST));//setting up modifiable word list
-    private Iterator<String> currentWordListIter;
+    private Iterator<String> currentWordListIter;//seting up the wordlist iterator
     private String currentWord; //stores current word to be guessed
-    private char[] blankCurrentWordArr; //stores an array of blanks that can get filled in and be getted (be string)
+    private char[] blankCurrentWordArr; //stores an array of blanks that can get filled in and be return (as a string)
     
     private int currentRound; //stores current round number
-    private int hangManStrikes; //default strikes should always begin with zero
+    private int hangManStrikes; //stores strikes, should always reset when a new round has been set
  
     private boolean isGameRunning = false; //boolean if game is running
-    private boolean isGameCompleted = false;
+    private boolean isGameCompleted = false; //boolean if the game is done (when the iterator has gone through all the items)
     private boolean isRoundFinished;    
 
-    public HangmanGame() {
+    public HangmanGame() {  //cms27 11/13/2023
         isGameRunning = true; // Resetting/Setting game data
         currentRound = 1;
         shuffleList(WordsList);
         currentWordListIter = WordsList.iterator();
         setGameRound(currentWordListIter);
-
     }
 
     private void setGameRound(Iterator<String> iterator) {  //Sets up game round.
@@ -41,15 +40,14 @@ public class HangmanGame {
         }
         else{
             isGameCompleted = true;
-        }
-        
+        }  
     }
 
     private void shuffleList(ArrayList<String> s){ //method to shuffle an ArrayList<String> in this case the word list order
         Collections.shuffle(s);
     }
 
-    //Blank array methods
+    //Blank array methods cms27 11/12/2023
 
     private char[] createBlankArr() {  //creates a char array with the size of the current word's length with underscores each element
         char[] blank = new char[currentWord.length()];
@@ -59,7 +57,7 @@ public class HangmanGame {
         return blank;
     }
 
-    private void fillBlankArr(char[] blankArr, char g) { //edits a char array to replace blank spots with chars that match with the current word
+    private void fillBlankArr(char[] blankArr, char g) { //edits a char array (in this case blank word) to replace blank spots with chars that match with the current word
         char[] explodedCurrentWord = currentWord.toCharArray();
         for(int i = 0; i < explodedCurrentWord.length; i++){
             if(g == explodedCurrentWord[i]){
@@ -68,7 +66,7 @@ public class HangmanGame {
         }
     }
 
-    //Guesses methods
+    //Guesses methods cms27 11/14/2023
 
     protected boolean isLetterCorrect(char guess) { //Returns true if letter guess was right and vice versa. Other classes should be able to use this method
         char[] explodedCurrentWord = currentWord.toCharArray();
@@ -78,7 +76,7 @@ public class HangmanGame {
                 return true;
             }
         }
-        hangManStrikes++;
+        hangManStrikes++; //adds strikes if false
         return false;
     }
 
@@ -90,8 +88,8 @@ public class HangmanGame {
         return false;
     }
     
-    protected int guessedLettersScore(char guess){ //return the score the player earned. Also modifies guessed word int (Must use with isLetterCorrect in GameRoom)
-        char[] explodedCurrentWord = currentWord.toCharArray();
+    protected int guessedLettersScore(char guess){ //return the score the player earned based on how letters it fills (Must use with isLetterCorrect in GameRoom)
+        char[] explodedCurrentWord = currentWord.toCharArray(); //sets another char array as a comparason to blank word array
         int amount = 0;
         for (int i = 0; i < explodedCurrentWord.length; i++){
             if(guess == explodedCurrentWord[i]){
@@ -112,11 +110,11 @@ public class HangmanGame {
         return amount * Constants.HANGMAN_DEFAULT_SCORE;
     }
 
-    //game booleans
+    //game booleans     cms27   11/12/2023
 
     protected boolean isHangmanCompleted (){
-        if (hangManStrikes >= Constants.HANGMAN_MAX_STRIKES){
-            isRoundFinished = true;
+        if (hangManStrikes >= Constants.HANGMAN_MAX_STRIKES){ 
+            isRoundFinished = true; //sets boolean roundfinished = true
             return true;
         }
         return false;
@@ -128,11 +126,11 @@ public class HangmanGame {
                 return false;
             }
         }
-        isRoundFinished = true;
+        isRoundFinished = true; //sets boolean roundfinished = true
         return true;
     }
     protected boolean canGoToNextRound(){ //dependant on hangmancompleted and isBlankCompleted
-        if(isRoundFinished){
+        if(isRoundFinished){ //this boolean is set from either hangman compelted or blank completed
             currentRound++;
             setGameRound(currentWordListIter);
             return true;
@@ -140,7 +138,7 @@ public class HangmanGame {
         return false;
     }
 
-    //getters
+    //getters   cms27 11/12/2023
 
     protected int getCurrentRound() {
         return currentRound;
@@ -158,17 +156,12 @@ public class HangmanGame {
         return currentWord;
     }
 
-    protected String getBlankStr() { //returns a string of the current blank current word array
+    protected String getBlankStr() { //returns a string of the current blank current word array     cms27 11/12/2023
         StringBuilder sb = new StringBuilder(32);
         for(int i = 0; i < blankCurrentWordArr.length; i++){
             sb.append(blankCurrentWordArr[i] + " ");
         }
         return sb.toString().trim();
     }
-
-
-
-    
-
     
 }

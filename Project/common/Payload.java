@@ -1,5 +1,6 @@
 package Project.common;
 
+//Mostly the same like Milestone 1 Cristian Sinchi cms27 11/12/2023
 
 import java.io.Serializable;
 
@@ -36,7 +37,7 @@ public class Payload implements Serializable {
     }
 
     private long clientId;
-
+    //cms27 11/12/2023
     public long getClientId() {
         return clientId;
     }

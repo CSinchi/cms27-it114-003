@@ -153,14 +153,13 @@ public enum Client {
             String query = text.replace("/rooms", "").trim();
             sendListRooms(query);
             return true;
-        } else if (text.startsWith("/guessletter")){ //comand to send a letter guess
+        } else if (text.startsWith("/guessletter")){ //comand to send a letter guess cms27 11/11/2023
             String guess = text.replace("/guessletter","").trim();
             guess.substring(0,1);
             sendGuessLetter(guess);
             return true;
-        }else if (text.startsWith("/guessword")){
+        }else if (text.startsWith("/guessword")){ //comand to send a word guess     cms27 11/11/2023
             String guessWord = text.replace("/guessword", "").trim();
-            
             sendGuessWord(guessWord);
             return true;
         }else if (text.equalsIgnoreCase("/users")) {

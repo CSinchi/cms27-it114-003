@@ -231,15 +231,14 @@ public class ServerThread extends Thread {
                 Room.joinRoom(p.getMessage().trim(), this);
                 break;
             case GUESS_LETTER:
-                //if(((GameRoom) currentRoom).hasLetters(p.getMessage().trim(),this)) {
                 ((GameRoom) currentRoom).handleGuessLetter(p.getMessage().toLowerCase().trim(), this);
-                //}
                 break;
             case GUESS_WORD:
                 ((GameRoom) currentRoom).handleGuessWord(p.getMessage().toLowerCase().trim(), this);
                 break;
             case SKIP:
                 ((GameRoom) currentRoom).handleSkip(this);
+                break;
             case READY: //Added from Ready Check    Cristian Sinchi cms27
                 try {
                 ((GameRoom) currentRoom).setReady(this);
