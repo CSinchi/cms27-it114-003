@@ -1,18 +1,24 @@
-package Project;
+package Project.common;
+
+//Mostly the same like Milestone 1 Cristian Sinchi cms27 11/12/2023
 
 import java.io.Serializable;
+
+import Project.common.TextFX.Color;
+
 public class Payload implements Serializable {
-    //read https://www.baeldung.com/java-serial-version-uid
-    private static final long serialVersionUID = 1L;//change this if the class changes
-    
+    // read https://www.baeldung.com/java-serial-version-uid
+    private static final long serialVersionUID = 1L;// change this if the class changes
 
     /**
      * Determines how to process the data on the receiver's side
      */
     private PayloadType payloadType;
+
     public PayloadType getPayloadType() {
         return payloadType;
     }
+
     public void setPayloadType(PayloadType payloadType) {
         this.payloadType = payloadType;
     }
@@ -21,37 +27,42 @@ public class Payload implements Serializable {
      * Who the payload is from
      */
     private String clientName;
+
     public String getClientName() {
         return clientName;
     }
+
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    private long clientId;
+    //cms27 11/12/2023
+    public long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(long clientId) {
+        this.clientId = clientId;
     }
 
     /**
      * Generic text based message
      */
     private String message;
+
     public String getMessage() {
         return message;
     }
+
     public void setMessage(String message) {
         this.message = message;
-    }
-    /**
-     * Generic number for example sake
-     */
-    private int number;
-    public int getNumber() {
-        return number;
-    }
-    public void setNumber(int number) {
-        this.number = number;
     }
 
     @Override
     public String toString() {
-	return String.format("Type[%s], Number[%s], Message[%s]", getPayloadType().toString(), getNumber(),
-		getMessage());
+        return String.format(TextFX.colorize("Type[%s],ClientId[%s,] ClientName[%s], Message[%s]", Color.CYAN), getPayloadType().toString(),
+                getClientId(), getClientName(),
+                getMessage());
     }
 }
