@@ -35,12 +35,41 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         
     }
 
+    private void syncGameState(ServerThread incomingClient) {  //from Drawing Grid
+        /*if (grid.hasCells()) {
+            incomingClient.sendGridDimensions(grid.getRows(), grid.getColumns());
+        } else {
+            incomingClient.sendGridReset();
+        } */
+        if (currentTurnPlayer != null) {
+            incomingClient
+                    .sendCurrentTurn(incomingClient.getClientId());
+        }
+        incomingClient.sendPhaseSync(currentPhase);
+        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        while (iter.hasNext()) {
+            ServerPlayer client = iter.next();
+            if (client.getClient().getClientId() == incomingClient.getClientId()) {
+                continue;
+            }
+            boolean success = false;
+            if (client.isReady()) {
+                success = incomingClient.sendReadyStatus(client.getClient().getClientId());
+            }
+
+            if (!success) {
+                break;
+            }
+        }
+    }
+
     @Override
     protected void addClient(ServerThread client) {
         logger.info(TextFX.colorize("Adding client as player",Color.BLUE));
         players.computeIfAbsent(client.getClientId(), id -> {
             ServerPlayer player = new ServerPlayer(client);
             super.addClient(client);
+            syncGameState(client);
             logger.info(String.format(TextFX.colorize("Total clients %s",Color.BLUE), clients.size()));// change visibility to protected
             return player;
         });
