@@ -161,7 +161,7 @@ public enum Client {
     
     //  Send Game Related Payloads Begin
 
-    protected void sendGuessLetter(String guess) throws IOException { //client method to send guess letter payload
+    public void sendGuessLetter(String guess) throws IOException { //client method to send guess letter payload
         Payload p = new Payload();
         p.setPayloadType(PayloadType.GUESS_LETTER);
         p.setMessage(guess);
@@ -169,7 +169,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    protected void sendGuessWord(String guess) throws IOException { //client method to send guess word payload
+    public void sendGuessWord(String guess) throws IOException { //client method to send guess word payload
         Payload p = new Payload();
         p.setPayloadType(PayloadType.GUESS_WORD);
         p.setClientName(clientName);
@@ -177,7 +177,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    protected void sendSkipStatus() throws IOException { //client method to send skip payload
+    public void sendSkipStatus() throws IOException { //client method to send skip payload
         Payload p = new Payload();
         p.setPayloadType(PayloadType.SKIP);
         out.writeObject(p);
@@ -330,12 +330,30 @@ public enum Client {
                
                  events.forEach(e -> {
                   if (e instanceof IGameEvents) {
-                 ((IGameEvents) e).onReceiveTurn(p.getClientId());
+                    ((IGameEvents) e).onReceiveTurn(getClientNameById(p.getClientId()));
                   }
                  });
                  
                 break;
             
+            case TIME:
+                events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveTime(p.getMessage());
+                  }
+                 });
+                
+                 break;
+
+            case BLANK_WORD:
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveBlankWord(p.getMessage());
+                  }
+                 });
+
+                 break;
+
             default:
                 logger.warning(String.format("Unhandled Payload type: %s", p.getPayloadType()));
                 break;

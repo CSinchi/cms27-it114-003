@@ -20,7 +20,11 @@ public interface IGameEvents extends IClientEvents {
      */
     void onReceivePhase(Phase phase);
 
+    //Triggered when  client recives turn payload from server
+    void onReceiveTurn(String player);
 
-    void onReceiveTurn(long clientID);
+    //Triggered when client recives time payload from server
+    void onReceiveTime(String time);
 
+    void onReceiveBlankWord(String word);
 }

@@ -1,14 +1,20 @@
 package Project.client.views;
 
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import Project.client.Card;
 import Project.client.Client;
@@ -17,8 +23,12 @@ import Project.client.IGameEvents;
 import Project.common.Phase;
 
 public class GamePanel extends JPanel implements IGameEvents {
-    private JPanel gridPanel;
+    private JPanel hgamePanel;
     private CardLayout cardLayout;
+
+    private JLabel timer;
+    private JLabel turnStatus;
+    private JLabel blankWord;
 
     public GamePanel(ICardControls controls) {
         super(new CardLayout());
@@ -39,8 +49,9 @@ public class GamePanel extends JPanel implements IGameEvents {
         });
         createReadyPanel();
         //createOptionsPanel();  TODO change from characters to turn options
-        gridPanel = new JPanel();
-        add(gridPanel);
+        hgamePanel = new JPanel(new BorderLayout());
+        createHGamePanel();
+        add(hgamePanel);
         setVisible(false);
         // don't need to add this to ClientUI as this isn't a primary panel(it's nested
         // in ChatGamePanel)
@@ -102,20 +113,22 @@ public class GamePanel extends JPanel implements IGameEvents {
     } */
 
     private void resetView() {
-        if (gridPanel == null) {
+        if (hgamePanel == null) {
             return;
         }
-        if (gridPanel.getLayout() != null) {
-            gridPanel.setLayout(null);
+        if (hgamePanel.getLayout() != null) {
+            hgamePanel.setLayout(null);
         }
-        gridPanel.removeAll();
-        gridPanel.revalidate();
-        gridPanel.repaint();
+        hgamePanel.removeAll();
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
     }
 
-    /*private void makeGrid(int rows, int columns) {
-        resetView();
-        cells = new CellPanel[rows][columns];
+    private void createHGamePanel() {
+        createTopHGPanel();
+        createBottomHGPanel();
+        createCenterHGPanel();
+        /*cells = new CellPanel[rows][columns];
         gridPanel.setLayout(new GridLayout(rows, columns));
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -123,10 +136,73 @@ public class GamePanel extends JPanel implements IGameEvents {
                 cells[i][j].setType(CellType.NONE, i, j, false);
                 gridPanel.add(cells[i][j]);
             }
-        }
-        gridPanel.revalidate();
-        gridPanel.repaint();
-    } */
+        }*/
+        hgamePanel.revalidate();
+        hgamePanel.repaint(); 
+    } 
+
+    private void createTopHGPanel() {
+        JPanel topPanel =new JPanel(new BorderLayout());
+        turnStatus = new JLabel("Current Turn:", SwingConstants.LEFT); //Turn Status
+        topPanel.add(turnStatus, BorderLayout.WEST);
+        timer = new JLabel("00"); //Turn Timer
+        topPanel.add(timer, BorderLayout.CENTER);
+        hgamePanel.add(topPanel, BorderLayout.NORTH);
+    }
+
+    private void createBottomHGPanel(){
+        JPanel bottomPanel = new JPanel( new BorderLayout());
+        JButton guessWordButton = new JButton("Guess a Word");
+        guessWordButton.addActionListener(l -> {
+            try {
+                String word = JOptionPane.showInputDialog(null, "Enter your guess:", "Guess a Word", JOptionPane.PLAIN_MESSAGE);
+                    if (word != null) {
+                        Client.INSTANCE.sendGuessWord(word);
+                    }
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+        bottomPanel.add(guessWordButton, BorderLayout.WEST);
+        JButton guessLetterButton = new JButton("Guess a Letter");
+        guessLetterButton.addActionListener(l -> {
+            try {
+                String[] options = new String[26];
+                for (int i = 0; i < 26; i++) {
+                    options[i] = String.valueOf((char) ('A' + i));
+                }
+                String letter = (String) JOptionPane.showInputDialog(null, "Choose a letter",
+                "Letter Selection", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                    if (letter != null) {
+                        Client.INSTANCE.sendGuessLetter(letter);
+                    }
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+        bottomPanel.add(guessLetterButton, BorderLayout.CENTER);
+        //TODO add letter guess
+        JButton skipButton = new JButton("Skip Turn");
+        skipButton.addActionListener(l -> {
+            try {
+                Client.INSTANCE.sendSkipStatus();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+        bottomPanel.add(skipButton, BorderLayout.EAST);
+        hgamePanel.add(bottomPanel,BorderLayout.SOUTH);
+
+    }
+
+    private void createCenterHGPanel(){
+        JPanel baseCenterPanel = new JPanel(new BorderLayout());//holder for all objects in this center panel
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        blankWord = new JLabel("Blank");
+        mainPanel.add(blankWord, BorderLayout.WEST);
+        baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
+        hgamePanel.add(baseCenterPanel, BorderLayout.CENTER);
+    }   
 
     @Override
     public void onClientConnect(long id, String clientName, String message) {
@@ -176,13 +252,31 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         } else if (phase == Phase.IN_PROGRESS) {
             cardLayout.next(this);
-        }/*  else if (phase == Phase.PREPARING) {
-            cardLayout.next(this);
-        } */
+        }
     }
 
     @Override
     public void onReceiveReady(long clientId) {
+    }
+
+    public void onReceiveTurn(String player){
+        turnStatus.setText("Current Turn: " + player);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
+
+    @Override
+    public void onReceiveTime(String time) {
+        timer.setText(time);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
+
+    @Override
+    public void onReceiveBlankWord(String word) {
+        blankWord.setText(word);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
     }
 
     /*@Override

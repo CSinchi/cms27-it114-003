@@ -14,6 +14,7 @@
 ./client/views/Menu.java
 ./client/views/RoomListItem.java
 ./client/views/RoomsPanel.java
+./client/views/ScoreListPanel.java
 ./client/views/UserInputPanel.java
 ./client/views/UserListPanel.java
 ./common/Constants.java

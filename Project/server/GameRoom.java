@@ -203,9 +203,33 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
+    private void syncTimer(int time) {
+        String s = String.valueOf(time);
+        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        while(iter.hasNext()){
+            ServerPlayer client = iter.next();
+            boolean success = client.getClient().sendTimer(s);
+            if(!success) {
+                handleDisconnect(client);
+            }
+        }
+    }
+
+    private void syncBlankWord(String word) {
+        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        while(iter.hasNext()){
+            ServerPlayer client = iter.next();
+            boolean success = client.getClient().sendBlankWord(word);
+            if(!success) {
+                handleDisconnect(client);
+            }
+        }
+    }
+
     protected void announceRound() { //cms27 12/14/2023
         logger.info(String.format(TextFX.colorize("This Round [%d] word is %s",Color.PURPLE),game.getCurrentRound(),game.getCurrentWord()));
         sendMessage(null, "Round " + game.getCurrentRound() + " Blank Word: " + game.getBlankStr());
+        syncBlankWord(game.getBlankStr());
     }
 
     //Serverplayer methods
@@ -226,8 +250,25 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         player.addScore(score);
         logger.info(String.format(TextFX.colorize("%s scored %d points", Color.PURPLE),player.getClient().getClientName(), score));
         sendMessage(null, String.format("%s scored %d points!",player.getClient().getClientName(), score));
+        rankPlayer(player);
         //sendMessage(null, String.format("&s's total score is %d points", player.getClient().getClientName(), player.getScore()));
       }
+
+    private void rankPlayer(ServerPlayer player) { //Added for Milestone 3 to set placement number value 
+        List<ServerPlayer> rankedList = new ArrayList<>(turnOrder);
+        rankedList.sort(Comparator.comparing(ServerPlayer::getScore).reversed());
+        Iterator<ServerPlayer> iter = rankedList.iterator();
+        int rankedNum = 1;
+        while(iter.hasNext()){
+            ServerPlayer otherPlayer = iter.next();
+            if(otherPlayer.getClient().getClientId() == player.getClient().getClientId()) {
+                player.setPlacement(rankedNum);
+                break;
+            }
+            rankedNum++;
+        }
+        
+    }
 
     private void displayPlayersScoreRanked(List<ServerPlayer> players){ //  cms27 11/15/2023
         List<ServerPlayer> rankedList = new ArrayList<>(players); //create a list from the existing "players" list
@@ -270,6 +311,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             scorePlayer(currentTurnPlayer, game.guessedLettersScore(letter));//scores the player
                 if (!checkIsPlayerWon()) {//checks if the max score win condition has been achieved
                 sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients
+                syncBlankWord(game.getBlankStr());
                 checkIsRoundCompleted(); //goes to next round if applicable (blank word is completed)
                     if(!checkIsGameCompleted()){ //goes to the next turn unless if the game is finished (bool from isGameCompleted)
                         nextTurn();
@@ -281,6 +323,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             sendMessage(null, client.getClientName() + " got the letter wrong!");
             sendMessage(null, "Strikes:" + game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
+            syncBlankWord(game.getBlankStr());
             checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
             if(!checkIsGameCompleted()){//goes to the next turn unless if the game is finished (bool from isGameCompleted)
                 nextTurn();
@@ -308,6 +351,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             scorePlayer(currentTurnPlayer, game.guessedWordScore(guess));//scores the player
                 if(!checkIsPlayerWon()){//checks if the max score win condition has been achieved
                     sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients (in this case a completed blank)
+                    syncBlankWord(game.getBlankStr());
                     checkIsRoundCompleted();//goes to next round if applicable (blank completed)
                     if(!checkIsGameCompleted()){//goes to the next turn unless if the game is finished (bool from isGameCompleted)
                         nextTurn();
@@ -320,6 +364,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             sendMessage(null, client.getClientName() + " got the word wrong!");
             sendMessage(null, "Strikes:" + game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
+            syncBlankWord(game.getBlankStr());
             checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
             if(!checkIsGameCompleted()){ //goes to the next turn unless if the game is finished (bool from isGameCompleted)
                 nextTurn();
@@ -376,6 +421,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                         String.format("%s took too long and has been skipped", sp.getClient().getClientName()));
                 nextTurn(); 
             });
+            readyTimer.setTickCallback((time)->{syncTimer(time);});
         }
     }
 

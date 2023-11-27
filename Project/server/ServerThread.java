@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.Time;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,6 +100,20 @@ public class ServerThread extends Thread {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.TURN);
         p.setClientId(clientId);
+        return send(p);
+    }
+
+    public boolean sendTimer(String time) {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.TIME);
+        p.setMessage(time);
+        return send(p);
+    }
+
+    public boolean sendBlankWord(String word) {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.BLANK_WORD);
+        p.setMessage(word);
         return send(p);
     }
 
