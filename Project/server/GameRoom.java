@@ -29,7 +29,6 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     private ServerPlayer currentTurnPlayer = null;
     private List<ServerPlayer> turnOrder = new ArrayList<ServerPlayer>();
-    private List<ServerPlayer> rankedOrder;
     private List<Character> guessedLetters = new ArrayList<Character>();
 
     public GameRoom(String name) {
@@ -130,15 +129,11 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     private void start() {
         updatePhase(Phase.IN_PROGRESS);
-        // TODO example
-        /**sendMessage(null, "Session started");
-        new TimedEvent(5, () -> resetSession())
-                .setTickCallback((time) -> {
-                    sendMessage(null, String.format("Example running session, time remaining: %s", time));
-                }); */
-        turnOrder = players.values().stream().filter(ServerPlayer::isReady).toList(); //initalize turnOrderList
-        rankedOrder = new ArrayList<>(turnOrder);
         logger.info(TextFX.colorize("Game Initializing", Color.PURPLE));
+        turnOrder = players.values().stream().filter(ServerPlayer::isReady).toList(); //initalize turnOrderList
+        players.values().stream().forEach(p -> p.setScore(0)); //Sets up player values
+        players.values().stream().forEach(p-> p.setPlacement(0));
+        syncRankedPlayers(turnOrder);
         game = new HangmanGame();
         sendMessage(null, "Started Hangman Game");
         announceRound();
@@ -178,8 +173,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         if (players.containsKey(player.getClient().getClientId())) {
             players.remove(player.getClient().getClientId()); 
             turnOrder.remove(player); //remove client from turnOrder
-            rankedOrder = new ArrayList<>(turnOrder);
-            rankPlayers(); //refresh rankings 
+            rankPlayers(turnOrder); //refresh rankings 
             super.handleDisconnect(null, player.getClient()); 
             logger.info(String.format("Total clients %s", clients.size()));
             sendMessage(null, player.getClient().getClientName() + " disconnected");
@@ -240,19 +234,21 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
-    private void syncRankedPlayers () {
-        String[] rs = new String[rankedOrder.size()];
+    private void syncRankedPlayers (List<ServerPlayer> players) {
+        String[] rs = new String[players.size()];
         int index = 0;
-        Iterator<ServerPlayer> rankedIter = rankedOrder.iterator();
+        Iterator<ServerPlayer> rankedIter = players.iterator();
         while(rankedIter.hasNext()){
             ServerPlayer rankedPlayer = rankedIter.next();
             if (index < rs.length && rankedPlayer.getPlacement() != 0) {
                 rs[index] = String.format("%d. %s[%d]", rankedPlayer.getPlacement(),rankedPlayer.getClient().getClientName(), rankedPlayer.getScore());
+            } else {
+                rs[index] = String.format("%s[%d]",rankedPlayer.getClient().getClientName(), rankedPlayer.getScore());
             }
             index++;
         }
 
-        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        Iterator<ServerPlayer> iter = this.players.values().stream().iterator();
         while(iter.hasNext()){
             ServerPlayer client = iter.next();
             boolean success = client.getClient().sendRankedPlayers(rs);
@@ -274,22 +270,29 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         player.addScore(score);
         logger.info(String.format(TextFX.colorize("%s scored %d points", Color.PURPLE),player.getClient().getClientName(), score));
         sendMessage(null, String.format("%s scored %d points!",player.getClient().getClientName(), score));
-        rankPlayers();
+        rankPlayers(turnOrder);
         //sendMessage(null, String.format("&s's total score is %d points", player.getClient().getClientName(), player.getScore()));
       }
 
     
-    private void rankPlayers() {
+    private void rankPlayers(List<ServerPlayer> players) {
         logger.info(TextFX.colorize("Ranking Players", Color.PURPLE));
-        rankedOrder.sort(Comparator.comparing(ServerPlayer::getScore).reversed());
-        Iterator<ServerPlayer> iter = rankedOrder.iterator();
+        List<ServerPlayer> rankedPlayers = new ArrayList<>(players);
+        rankedPlayers.sort(Comparator.comparing(ServerPlayer::getScore).reversed());
+        Iterator<ServerPlayer> iter = rankedPlayers.iterator();
         int rankNum = 1;
+        Boolean allScoresZeros = rankedPlayers.stream().allMatch(r -> r.getScore() == 0);
         while(iter.hasNext()){
             ServerPlayer player = iter.next();
-            player.setPlacement(rankNum);
-            rankNum++;
+            if (!allScoresZeros) {
+                player.setPlacement(rankNum);
+                rankNum++;
+            } else {
+                break;
+            }
+            
         }
-        syncRankedPlayers();
+        syncRankedPlayers(rankedPlayers);
     }
 
     private void displayPlayersScoreRanked() { //  cms27 11/15/2023

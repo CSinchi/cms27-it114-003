@@ -319,7 +319,7 @@ public class GamePanel extends JPanel implements IGameEvents {
     }
 
     public void onReceiveRankedPlayers(String[] players) {
-        rankedPlayers.updateRanking(players);
+        rankedPlayers.displayRankings(players);
         hgamePanel.revalidate();
         hgamePanel.repaint();
     }
