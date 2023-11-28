@@ -113,6 +113,13 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
+    public boolean sendRound(String round) {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.ROUND);
+        p.setMessage(round);
+        return send(p);
+    }
+
     public boolean sendBlankWord(String word) {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.BLANK_WORD);

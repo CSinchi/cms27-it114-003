@@ -361,12 +361,21 @@ public enum Client {
                  ((IGameEvents) e).onReceiveLetterStat(lp.getMessage(),lp.getStat());
                   }
                  });
+
                  break;
             case RANKED_PLAYERS:
                  RankedPlayersPayload pp = (RankedPlayersPayload) p;
                  events.forEach(e -> {
                   if (e instanceof IGameEvents) {
                  ((IGameEvents) e).onReceiveRankedPlayers(pp.getPlayers());
+                  }
+                 });
+
+                 break;
+            case ROUND:
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveRound(p.getMessage());
                   }
                  });
                  

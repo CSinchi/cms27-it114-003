@@ -2,9 +2,7 @@ package Project.client.views;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -31,6 +29,7 @@ public class GamePanel extends JPanel implements IGameEvents {
     private JLabel timer;
     private JLabel turnStatus;
     private JLabel blankWord;
+    private JLabel round;
     private LetterGridPanel letterGrid;
     private RankedPlayers rankedPlayers;
 
@@ -149,10 +148,16 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     private void createTopHGPanel() {
         JPanel topPanel =new JPanel(new BorderLayout());
+
+        JPanel turnPanel = new JPanel(new BorderLayout());
         turnStatus = new JLabel("Current Turn:", SwingConstants.LEFT); //Turn Status
-        topPanel.add(turnStatus, BorderLayout.WEST);
         timer = new JLabel("00"); //Turn Timer
-        topPanel.add(timer, BorderLayout.CENTER);
+        turnPanel.add(turnStatus, BorderLayout.WEST);
+        turnPanel.add(timer, BorderLayout.CENTER);
+        topPanel.add(turnPanel, BorderLayout.EAST);
+
+        round = new JLabel("Round:", SwingConstants.LEFT);
+        topPanel.add(round, BorderLayout.WEST);
         hgamePanel.add(topPanel, BorderLayout.NORTH);
     }
 
@@ -288,7 +293,7 @@ public class GamePanel extends JPanel implements IGameEvents {
     }
 
     public void onReceiveTurn(String player){
-        turnStatus.setText("Current Turn: " + player);
+        turnStatus.setText("Current Turn: " + player + " ");
         hgamePanel.revalidate();
         hgamePanel.repaint();
     }
@@ -315,7 +320,10 @@ public class GamePanel extends JPanel implements IGameEvents {
     }
 
     public void onReceiveRound(String round) {
-
+        letterGrid.resetColors();
+        this.round.setText("Round: " + round);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
     }
 
     public void onReceiveRankedPlayers(String[] players) {

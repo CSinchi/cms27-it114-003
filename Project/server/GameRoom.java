@@ -223,6 +223,18 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
+    private void syncRound(int round) {
+        String r = String.valueOf(round);
+        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        while(iter.hasNext()){
+            ServerPlayer client = iter.next();
+            boolean success = client.getClient().sendRound(r);
+            if(!success) {
+                handleDisconnect(client);
+            }
+        }
+    }
+
     private void syncLetterStat(String letter , Boolean isCorrect) {
         Iterator<ServerPlayer> iter = players.values().stream().iterator();
         while(iter.hasNext()){
@@ -261,6 +273,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     protected void announceRound() { //cms27 12/14/2023
         logger.info(String.format(TextFX.colorize("This Round [%d] word is %s",Color.PURPLE),game.getCurrentRound(),game.getCurrentWord()));
         sendMessage(null, "Round " + game.getCurrentRound() + " Blank Word: " + game.getBlankStr());
+        syncRound(game.getCurrentRound());
         syncBlankWord(game.getBlankStr());
     }
 
@@ -332,6 +345,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         Character Letter = letter;
         if (guessedLetters.contains(Letter)) {
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot send an already guessed letter");
+            return;
         } else {
             guessedLetters.add(Letter);
         }
@@ -484,6 +498,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             ServerPlayer player = iter.next();
             if(player.getScore() >= Constants.HANGMAN_MAX_SCORE) {
                 cancelReadyTimer();
+                updatePhase(Phase.RESOLVE);
                 ServerPlayer winningPlayer = getHighScorePlayer(turnOrder);
                 logger.info(TextFX.colorize(winningPlayer.getClient().getClientName() + " achieved win condition-> MAX Score reached or suprass", Color.PURPLE));
                 sendMessage(null,"MAX Score Hit!!! " + winningPlayer.getClient().getClientName() + " won the game with the score of " + winningPlayer.getScore());
@@ -496,10 +511,11 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     private boolean checkIsGameCompleted() { //this boolean is used in guess handling to check for game completion      cms27 11/13/2023
         if(game.getIsGameCompleted()){ //Checks boolean IsGameCompletd in hangman obj (if true, then game is finshed)
+            updatePhase(Phase.RESOLVE);
             ServerPlayer winningPlayer = getHighScorePlayer(turnOrder); //gets the player with the highest score
             logger.info(TextFX.colorize(winningPlayer.getClient().getClientName() + " achieved win condition-> Completed game with highest score", Color.PURPLE));
             sendMessage(null, "Game Ended " + winningPlayer.getClient().getClientName() + " won with a score of " + winningPlayer.getScore());
-            resetSession(); //goes back to READY phase
+            resetSession();
             return true;
         }
         return false;
@@ -507,21 +523,22 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     private void checkIsRoundCompleted() {// this boolean is used in guess handling to check if the next round can be go to
         if(game.isBlankCompleted()){ //checks boolean in hangman obj (if true then broadcast win round) Note: blank word gets completed if a word guess was true
+            updatePhase(Phase.RESOLVE);
             sendMessage(null, "Blank Word Solved! The word was " + game.getCurrentWord());
-            guessedLetters.clear();
             displayPlayersScoreRanked(); //function to display player scores
             if(!checkIsGameCompleted()); { //runs if game is not completed
                 if(game.canGoToNextRound()){
+                guessedLetters.clear();
                 announceRound();
                 }
             }
         }
         if(game.isHangmanCompleted()){ //checks boolean in hangman obj (if true then broadcast lose round)
             sendMessage(null, "Hangman Completed.... The word was " + game.getCurrentWord());
-            guessedLetters.clear();
             displayPlayersScoreRanked();//function to display player scores
             if(!checkIsGameCompleted()){ //runs if game is not completed
                 if(game.canGoToNextRound()) {
+                    guessedLetters.clear();
                     announceRound();
                 }
             }   

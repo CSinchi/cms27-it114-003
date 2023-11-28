@@ -8,7 +8,7 @@ public class RankedPlayers extends JPanel {
 
     public RankedPlayers() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Add a border
+        setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Border
     }
 
     public void displayRankings(String[] players) {
