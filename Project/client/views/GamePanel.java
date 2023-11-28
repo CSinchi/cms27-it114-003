@@ -2,6 +2,8 @@ package Project.client.views;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,6 +31,8 @@ public class GamePanel extends JPanel implements IGameEvents {
     private JLabel timer;
     private JLabel turnStatus;
     private JLabel blankWord;
+    private LetterGridPanel letterGrid;
+    private RankedPlayers rankedPlayers;
 
     public GamePanel(ICardControls controls) {
         super(new CardLayout());
@@ -127,6 +131,8 @@ public class GamePanel extends JPanel implements IGameEvents {
     private void createHGamePanel() {
         createTopHGPanel();
         createBottomHGPanel();
+        //createLeftHGPanel();
+        createRightHGPanel();
         createCenterHGPanel();
         /*cells = new CellPanel[rows][columns];
         gridPanel.setLayout(new GridLayout(rows, columns));
@@ -198,12 +204,34 @@ public class GamePanel extends JPanel implements IGameEvents {
     private void createCenterHGPanel(){
         JPanel baseCenterPanel = new JPanel(new BorderLayout());//holder for all objects in this center panel
         JPanel mainPanel = new JPanel(new BorderLayout());
-        blankWord = new JLabel("Blank");
+        blankWord = new JLabel("Blank", SwingConstants.CENTER);
+        hgamePanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int size = hgamePanel.getWidth() / 20; // Adjust this ratio as needed
+                blankWord.setFont(new Font(blankWord.getFont().getName(),Font.PLAIN, size));
+            }
+        });
         mainPanel.add(blankWord, BorderLayout.WEST);
         baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
+        letterGrid = new LetterGridPanel(); //Initalize letter grid object
+        baseCenterPanel.add(letterGrid,BorderLayout.SOUTH); //add letter grid to center panel to the south
         hgamePanel.add(baseCenterPanel, BorderLayout.CENTER);
     }   
 
+    private void createLeftHGPanel(){
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        JLabel test = new JLabel("test");
+        leftPanel.add(test, BorderLayout.NORTH);
+        hgamePanel.add(leftPanel, BorderLayout.WEST);
+    }
+
+    private void createRightHGPanel(){
+        rankedPlayers = new RankedPlayers();
+        hgamePanel.add(rankedPlayers, BorderLayout.EAST);
+    }
+
+    
     @Override
     public void onClientConnect(long id, String clientName, String message) {
     }
@@ -279,6 +307,22 @@ public class GamePanel extends JPanel implements IGameEvents {
         hgamePanel.repaint();
     }
 
+    public void onReceiveLetterStat(String letter, Boolean isCorrect) {
+        char l = letter.charAt(0);
+        letterGrid.setLetterStatus(l, isCorrect);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
+
+    public void onReceiveRound(String round) {
+
+    }
+
+    public void onReceiveRankedPlayers(String[] players) {
+        rankedPlayers.updateRanking(players);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
     /*@Override
     public void onReceiveCell(List<Cell> cells) {
         for (Cell c : cells) {

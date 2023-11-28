@@ -8,10 +8,13 @@ import java.sql.Time;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Project.client.views.LetterGridPanel;
 import Project.common.Constants;
+import Project.common.LetterStatPayload;
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.Phase;
+import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
@@ -124,6 +127,18 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
+    public boolean sendLetterStat(String letter, Boolean isCorrect) {
+        LetterStatPayload payload = new LetterStatPayload();
+        payload.setStat(isCorrect);
+        payload.setMessage(letter);
+        return send(payload);
+    }
+
+    public boolean sendRankedPlayers(String[] players) {
+        RankedPlayersPayload payload = new RankedPlayersPayload();
+        payload.setPlayers(players);
+        return send(payload);
+    }
     public boolean sendRoomsList(String[] rooms, String message) {
         RoomResultPayload payload = new RoomResultPayload();
         payload.setRooms(rooms);

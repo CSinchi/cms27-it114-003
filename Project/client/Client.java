@@ -11,10 +11,11 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import Project.common.Constants;
-
+import Project.common.LetterStatPayload;
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.Phase;
+import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
@@ -353,7 +354,23 @@ public enum Client {
                  });
 
                  break;
-
+            case LETTER_STAT:
+                 LetterStatPayload lp = (LetterStatPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveLetterStat(lp.getMessage(),lp.getStat());
+                  }
+                 });
+                 break;
+            case RANKED_PLAYERS:
+                 RankedPlayersPayload pp = (RankedPlayersPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveRankedPlayers(pp.getPlayers());
+                  }
+                 });
+                 
+                 break;
             default:
                 logger.warning(String.format("Unhandled Payload type: %s", p.getPayloadType()));
                 break;
