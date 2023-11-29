@@ -210,17 +210,19 @@ public class GamePanel extends JPanel implements IGameEvents {
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         blankWord = new JLabel("Blank", SwingConstants.CENTER);
+       
+        mainPanel.add(blankWord, BorderLayout.WEST);
+        hangmanImage = new HangmanPanel();
+        mainPanel.add(hangmanImage, BorderLayout.EAST);
+        baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
         hgamePanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 int size = hgamePanel.getWidth() / 20; // Adjust this ratio as needed
                 blankWord.setFont(new Font(blankWord.getFont().getName(),Font.PLAIN, size));
+                hangmanImage.scaleImage(hgamePanel.getWidth() / 3);
             }
         });
-        mainPanel.add(blankWord, BorderLayout.WEST);
-        hangmanImage =new HangmanPanel();
-        mainPanel.add(hangmanImage, BorderLayout.EAST);
-        baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
 
         letterGrid = new LetterGridPanel(); //Initalize letter grid object
         baseCenterPanel.add(letterGrid,BorderLayout.SOUTH); //add letter grid to center panel to the south

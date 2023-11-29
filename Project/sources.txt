@@ -10,6 +10,7 @@
 ./client/views/ChatPanel.java
 ./client/views/ConnectionPanel.java
 ./client/views/GamePanel.java
+./client/views/HangmanPanel.java
 ./client/views/LetterGridPanel.java
 ./client/views/Menu.java
 ./client/views/RankedPlayers.java
