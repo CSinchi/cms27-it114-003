@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 
 import Project.client.Card;
 import Project.client.Client;
@@ -30,8 +31,10 @@ public class GamePanel extends JPanel implements IGameEvents {
     private JLabel turnStatus;
     private JLabel blankWord;
     private JLabel round;
+    private JLabel strikes;
     private LetterGridPanel letterGrid;
     private RankedPlayers rankedPlayers;
+    private HangmanPanel hangmanImage;
 
     public GamePanel(ICardControls controls) {
         super(new CardLayout());
@@ -133,15 +136,7 @@ public class GamePanel extends JPanel implements IGameEvents {
         //createLeftHGPanel();
         createRightHGPanel();
         createCenterHGPanel();
-        /*cells = new CellPanel[rows][columns];
-        gridPanel.setLayout(new GridLayout(rows, columns));
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                cells[i][j] = new CellPanel();
-                cells[i][j].setType(CellType.NONE, i, j, false);
-                gridPanel.add(cells[i][j]);
-            }
-        }*/
+        
         hgamePanel.revalidate();
         hgamePanel.repaint(); 
     } 
@@ -158,6 +153,10 @@ public class GamePanel extends JPanel implements IGameEvents {
 
         round = new JLabel("Round:", SwingConstants.LEFT);
         topPanel.add(round, BorderLayout.WEST);
+
+        strikes = new JLabel("Strikes:" , SwingConstants.CENTER);
+        topPanel.add(strikes, BorderLayout.CENTER);
+
         hgamePanel.add(topPanel, BorderLayout.NORTH);
     }
 
@@ -208,6 +207,7 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     private void createCenterHGPanel(){
         JPanel baseCenterPanel = new JPanel(new BorderLayout());//holder for all objects in this center panel
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         blankWord = new JLabel("Blank", SwingConstants.CENTER);
         hgamePanel.addComponentListener(new ComponentAdapter() {
@@ -218,9 +218,13 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         mainPanel.add(blankWord, BorderLayout.WEST);
+        hangmanImage =new HangmanPanel();
+        mainPanel.add(hangmanImage, BorderLayout.EAST);
         baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
+
         letterGrid = new LetterGridPanel(); //Initalize letter grid object
         baseCenterPanel.add(letterGrid,BorderLayout.SOUTH); //add letter grid to center panel to the south
+
         hgamePanel.add(baseCenterPanel, BorderLayout.CENTER);
     }   
 
@@ -331,30 +335,11 @@ public class GamePanel extends JPanel implements IGameEvents {
         hgamePanel.revalidate();
         hgamePanel.repaint();
     }
-    /*@Override
-    public void onReceiveCell(List<Cell> cells) {
-        for (Cell c : cells) {
-            CellPanel target = this.cells[c.getX()][c.getY()];
-            target.setType(c.getCellType(), c.getX(), c.getY(), c.isBlocked());
-            target.setOccupiedCount(c.getCharactersInCell().size());
-        }
-        gridPanel.revalidate();
-        gridPanel.repaint();
+    
+    public void onReceiveStrike(String strike) {
+        strikes.setText("Strikes: " + strike);
+        hangmanImage.changeImage(strike);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
     }
-
-    @Override
-    public void onReceiveGrid(int rows, int columns) {
-        resetView();
-        if (rows > 0 && columns > 0) {
-            makeGrid(rows, columns);
-        }
-    }
-
-    @Override
-     public void onReceiveCharacter(long clientId, Character character) {
-        // kind of a sideways way of interacting with the ChatPanel, will likely
-        // refactor this later
-        ChatGamePanel cgp = (ChatGamePanel) this.getParent().getParent();
-        cgp.getChatPanel().addText(Client.INSTANCE.getClientNameById(clientId) + " summoned " + character.getName());
-    } */
 }

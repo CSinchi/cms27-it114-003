@@ -1,8 +1,5 @@
 package Project.client;
 
-import java.util.List;
-
-
 import Project.common.Phase;
 
 public interface IGameEvents extends IClientEvents {
@@ -34,4 +31,6 @@ public interface IGameEvents extends IClientEvents {
     void onReceiveRound(String round);
 
     void onReceiveRankedPlayers(String[] players);
+
+    void onReceiveStrike(String strike);
 }

@@ -32,7 +32,7 @@ public class HangmanGame {
     }
 
     private void setGameRound(Iterator<String> iterator) {  //Sets up game round.
-        if(iterator.hasNext()){
+        if(iterator.hasNext() && currentRound <= Constants.HANGMAN_MAX_ROUNDS) { //will continue if it has more items and it has not reached max rounds
             hangManStrikes = 0;
             currentWord = iterator.next();
             blankCurrentWordArr = createBlankArr();//sets up blank current word arr

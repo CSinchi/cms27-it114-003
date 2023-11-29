@@ -380,6 +380,14 @@ public enum Client {
                  });
                  
                  break;
+            case STRIKE:
+                events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveStrike(p.getMessage());
+                  }
+                 });
+
+                 break;
             default:
                 logger.warning(String.format("Unhandled Payload type: %s", p.getPayloadType()));
                 break;

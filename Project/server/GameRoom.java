@@ -1,6 +1,7 @@
 package Project.server;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,8 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     private boolean isGameRunning;
 
     private ServerPlayer currentTurnPlayer = null;
-    private List<ServerPlayer> turnOrder = new ArrayList<ServerPlayer>();
+    private List<ServerPlayer> preTurnOrder = new ArrayList<ServerPlayer>();
+    private List<ServerPlayer> turnOrder;
     private List<Character> guessedLetters = new ArrayList<Character>();
 
     public GameRoom(String name) {
@@ -130,7 +132,8 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     private void start() {
         updatePhase(Phase.IN_PROGRESS);
         logger.info(TextFX.colorize("Game Initializing", Color.PURPLE));
-        turnOrder = players.values().stream().filter(ServerPlayer::isReady).toList(); //initalize turnOrderList
+        preTurnOrder = players.values().stream().filter(ServerPlayer::isReady).toList(); //initalize turnOrderList
+        shuffleServerPlayers();//shuffle order
         players.values().stream().forEach(p -> p.setScore(0)); //Sets up player values
         players.values().stream().forEach(p-> p.setPlacement(0));
         syncRankedPlayers(turnOrder);
@@ -235,6 +238,18 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
+    private void syncStrike(int strike) {
+        String s = String.valueOf(strike);
+        Iterator<ServerPlayer> iter  =players.values().stream().iterator();
+        while(iter.hasNext()) {
+            ServerPlayer client = iter.next();
+            boolean success = client.getClient().sendStrike(s);
+            if(!success) {
+                handleDisconnect(client);
+            }
+        }
+    }
+
     private void syncLetterStat(String letter , Boolean isCorrect) {
         Iterator<ServerPlayer> iter = players.values().stream().iterator();
         while(iter.hasNext()){
@@ -274,6 +289,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         logger.info(String.format(TextFX.colorize("This Round [%d] word is %s",Color.PURPLE),game.getCurrentRound(),game.getCurrentWord()));
         sendMessage(null, "Round " + game.getCurrentRound() + " Blank Word: " + game.getBlankStr());
         syncRound(game.getCurrentRound());
+        syncStrike(game.getHangmanStrikes());
         syncBlankWord(game.getBlankStr());
     }
 
@@ -369,6 +385,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             sendMessage(null, client.getClientName() + " got the letter wrong!");
             syncLetterStat(guess, false);
             sendMessage(null, "Strikes:" + game.getHangmanStrikes());
+            syncStrike(game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
             syncBlankWord(game.getBlankStr());
             checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
@@ -410,6 +427,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             cancelReadyTimer();//stops any timer
             sendMessage(null, client.getClientName() + " got the word wrong!");
             sendMessage(null, "Strikes:" + game.getHangmanStrikes());
+            syncStrike(game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
             syncBlankWord(game.getBlankStr());
             checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
@@ -488,6 +506,12 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             readyTimer.cancel();
             readyTimer = null;
         }
+    }
+
+    private void shuffleServerPlayers() {
+        List<ServerPlayer> sList = new ArrayList<>(preTurnOrder);
+        Collections.shuffle(sList);
+        turnOrder = new ArrayList<>(sList);
     }
 
     //void check methods for complete win, win round, or lose round

@@ -120,6 +120,13 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
+    public boolean sendStrike(String strike) {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.STRIKE);
+        p.setMessage(strike);
+        return send(p);
+    }
+
     public boolean sendBlankWord(String word) {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.BLANK_WORD);

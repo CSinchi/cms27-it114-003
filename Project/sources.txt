@@ -6,7 +6,6 @@
 ./client/IClientEvents.java
 ./client/IGameEvents.java
 ./client/TestUI.java
-./client/views/CellPanel.java
 ./client/views/ChatGamePanel.java
 ./client/views/ChatPanel.java
 ./client/views/ConnectionPanel.java
