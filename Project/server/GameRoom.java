@@ -140,6 +140,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         game = new HangmanGame();
         sendMessage(null, "Started Hangman Game");
         announceRound();
+        logger.info(TextFX.colorize("nextTurn invoked from start()", Color.YELLOW));
         nextTurn();
         
         }
@@ -293,6 +294,15 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         syncBlankWord(game.getBlankStr());
     }
 
+    protected void announceNextRound() {
+        if (game.getIsGameCompleted()) {
+            sendMessage(null, "MAX rounds reached! Game Ending soon!");
+        }
+        else {
+            sendMessage(null, "Next Round will start soon!");
+        }
+    }
+
     //Serverplayer methods
 
     private void scorePlayer(ServerPlayer player, int score) {  
@@ -371,16 +381,13 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             sendMessage(null, client.getClientName() + " got the letter right!");
             syncLetterStat(guess,true);
             scorePlayer(currentTurnPlayer, game.guessedLettersScore(letter));//scores the player
-                if (!checkIsPlayerWon()) {//checks if the max score win condition has been achieved
+            if (!checkIsPlayerWon()) {//checks if the max score win condition has been achieved
                 sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients
                 syncBlankWord(game.getBlankStr());
-                checkIsRoundCompleted(); //goes to next round if applicable (blank word is completed)
-                    if(!checkIsGameCompleted()){ //goes to the next turn unless if the game is finished (bool from isGameCompleted)
-                        nextTurn();
-                    } 
-                }
+                checkIsRoundCompleted("guessLetter right"); //goes to next round if applicable (blank word is completed) 
             }
-        else{
+        }
+        else {
             cancelReadyTimer(); //stops any timer
             sendMessage(null, client.getClientName() + " got the letter wrong!");
             syncLetterStat(guess, false);
@@ -388,10 +395,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             syncStrike(game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
             syncBlankWord(game.getBlankStr());
-            checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
-            if(!checkIsGameCompleted()){//goes to the next turn unless if the game is finished (bool from isGameCompleted)
-                nextTurn();
-            }
+            checkIsRoundCompleted("guessLetter wrong"); //goes to next round if applicable (hangman completed)
         }
     }
 
@@ -416,10 +420,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                 if(!checkIsPlayerWon()){//checks if the max score win condition has been achieved
                     sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients (in this case a completed blank)
                     syncBlankWord(game.getBlankStr());
-                    checkIsRoundCompleted();//goes to next round if applicable (blank completed)
-                    if(!checkIsGameCompleted()){//goes to the next turn unless if the game is finished (bool from isGameCompleted)
-                        nextTurn();
-                    }
+                    checkIsRoundCompleted("guessWord right");//goes to next round if applicable (blank completed)
                 }  
         }   
 
@@ -430,10 +431,8 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             syncStrike(game.getHangmanStrikes());
             sendMessage(null, "Blank Word: " + game.getBlankStr());
             syncBlankWord(game.getBlankStr());
-            checkIsRoundCompleted(); //goes to next round if applicable (hangman completed)
-            if(!checkIsGameCompleted()){ //goes to the next turn unless if the game is finished (bool from isGameCompleted)
-                nextTurn();
-            }
+            checkIsRoundCompleted("guessWord wrong"); //goes to next round if applicable (hangman completed)
+
         }
     }
 
@@ -448,6 +447,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
         cancelReadyTimer();
         sendMessage(null,client.getClientName()+" skipped thier turned!");
+        logger.info(TextFX.colorize("nextTurn invoked from normal skip", Color.YELLOW));
         nextTurn();
     }
 
@@ -465,6 +465,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     //turn methods from dungeon prep Project    Cristain Sinchi cms27 11/15/2023
 
     private void nextTurn() { //used to go to next player
+        logger.info(String.format(TextFX.colorize("This Round [%d] word is %s",Color.PURPLE),game.getCurrentRound(),game.getCurrentWord())); //debugging for word guessing
         updatePhase(Phase.TURN);
         if (currentTurnPlayer == null) {
             currentTurnPlayer = turnOrder.get(0);
@@ -482,6 +483,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             sendMessage(null, String.format("It's %s's turn to guess", sp.getClient().getClientName()));
             cancelReadyTimer(); //cancel any ongoing timer (in this case Readytimer)
             readyTimer = new TimedEvent(30, () -> {
+                logger.info(TextFX.colorize("nextTurn invoked from auto skip", Color.YELLOW));
                 sendMessage(null,
                         String.format("%s took too long and has been skipped", sp.getClient().getClientName()));
                 nextTurn(); 
@@ -517,6 +519,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     //void check methods for complete win, win round, or lose round
 
     private boolean checkIsPlayerWon() {
+        logger.info(TextFX.colorize("Game Complete Check invoked", Color.YELLOW));
         Iterator<ServerPlayer> iter = players.values().stream().iterator();
         while (iter.hasNext()) {
             ServerPlayer player = iter.next();
@@ -533,41 +536,61 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         return false;     
     }
 
-    private boolean checkIsGameCompleted() { //this boolean is used in guess handling to check for game completion      cms27 11/13/2023
+    private void checkIsGameCompleted() { //this boolean is used in guess handling to check for game completion      cms27 11/13/2023
+        logger.info(TextFX.colorize("Game Complete Check invoked", Color.YELLOW));
         if(game.getIsGameCompleted()){ //Checks boolean IsGameCompletd in hangman obj (if true, then game is finshed)
+            cancelReadyTimer(); 
             updatePhase(Phase.RESOLVE);
             ServerPlayer winningPlayer = getHighScorePlayer(turnOrder); //gets the player with the highest score
             logger.info(TextFX.colorize(winningPlayer.getClient().getClientName() + " achieved win condition-> Completed game with highest score", Color.PURPLE));
             sendMessage(null, "Game Ended " + winningPlayer.getClient().getClientName() + " won with a score of " + winningPlayer.getScore());
             resetSession();
-            return true;
         }
-        return false;
     }
 
-    private void checkIsRoundCompleted() {// this boolean is used in guess handling to check if the next round can be go to
+    private void checkIsRoundCompleted(String originInvoke) {// this boolean is used in guess handling to check if the next round can be go to
         if(game.isBlankCompleted()){ //checks boolean in hangman obj (if true then broadcast win round) Note: blank word gets completed if a word guess was true
             updatePhase(Phase.RESOLVE);
             sendMessage(null, "Blank Word Solved! The word was " + game.getCurrentWord());
             displayPlayersScoreRanked(); //function to display player scores
-            if(!checkIsGameCompleted()); { //runs if game is not completed
-                if(game.canGoToNextRound()){
-                guessedLetters.clear();
-                announceRound();
-                }
-            }
-        }
-        if(game.isHangmanCompleted()){ //checks boolean in hangman obj (if true then broadcast lose round)
-            sendMessage(null, "Hangman Completed.... The word was " + game.getCurrentWord());
-            displayPlayersScoreRanked();//function to display player scores
-            if(!checkIsGameCompleted()){ //runs if game is not completed
-                if(game.canGoToNextRound()) {
+            announceNextRound();
+            logger.info(TextFX.colorize("Game Check Delay Begin", Color.YELLOW));
+            readyTimer = new TimedEvent(6, () -> { //setting a delay until new round is evaluated
+                logger.info(TextFX.colorize("Game Check Delay End", Color.YELLOW));
+                checkIsGameCompleted();
+                if(game.canGoToNextRound()) { //will go to next round if it can and when the game is not complete
                     guessedLetters.clear();
                     announceRound();
+                    logger.info(TextFX.colorize("nextTurn invoked for new round from " + originInvoke, Color.YELLOW));
+                    nextTurn();
                 }
-            }   
+            });
+            
         }
+    
+        else if(game.isHangmanCompleted()){ //checks boolean in hangman obj (if true then broadcast lose round)
+            sendMessage(null, "Hangman Completed.... The word was " + game.getCurrentWord());
+            displayPlayersScoreRanked();//function to display player scores
+            announceNextRound();
+            logger.info(TextFX.colorize("Game Check Delay Begin", Color.YELLOW));
+            readyTimer = new TimedEvent(6, () -> { //setting a delay until new round is evaluated
+                logger.info(TextFX.colorize("Game Check Delay End", Color.YELLOW));
+                checkIsGameCompleted();
+                if(game.canGoToNextRound()) { //will go to next round if it can and when the game is not complete
+                    guessedLetters.clear();
+                    announceRound();
+                    logger.info(TextFX.colorize("nextTurn invoked for new round from " + originInvoke, Color.YELLOW));
+                    nextTurn();
+                }
+            });
+        } 
+        
+        else { //goes to the next turn 
+            logger.info(TextFX.colorize("nextTurn invoked from " + originInvoke, Color.YELLOW)); //should only send "wrong" origins
+            nextTurn();
+        } 
     }
+    
 
     //getters
 

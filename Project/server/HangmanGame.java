@@ -115,6 +115,9 @@ public class HangmanGame {
     protected boolean isHangmanCompleted (){
         if (hangManStrikes >= Constants.HANGMAN_MAX_STRIKES){ 
             isRoundFinished = true; //sets boolean roundfinished = true
+            if (currentRound >= Constants.HANGMAN_MAX_ROUNDS) {
+                isGameCompleted = true;
+            }
             return true;
         }
         return false;
@@ -127,15 +130,23 @@ public class HangmanGame {
             }
         }
         isRoundFinished = true; //sets boolean roundfinished = true
+        if (currentRound >= Constants.HANGMAN_MAX_ROUNDS) {
+                isGameCompleted = true;
+        }
         return true;
     }
     protected boolean canGoToNextRound(){ //dependant on hangmancompleted and isBlankCompleted
-        if(isRoundFinished){ //this boolean is set from either hangman compelted or blank completed
+        if(isGameCompleted) {
+            return false;
+        }
+        else if(isRoundFinished){ //this boolean is set from either hangman compelted or blank completed
             currentRound++;
             setGameRound(currentWordListIter);
             return true;
         }
-        return false;
+        else {
+            return false;
+        }     
     }
 
     //getters   cms27 11/12/2023
