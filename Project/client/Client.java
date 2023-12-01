@@ -5,21 +5,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Scanner;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.logging.Logger;
 
 import Project.common.Constants;
+import Project.common.LetterStatPayload;
 import Project.common.Payload;
 import Project.common.PayloadType;
+import Project.common.Phase;
+import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
 
+//Modifted version from Drawing Grid, adjusted for this project cms27 11/22/23
+
 public enum Client {
-    Instance;
+    INSTANCE;
 
     Socket server = null;
     ObjectOutputStream out = null;
@@ -34,6 +38,13 @@ public enum Client {
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
     private Hashtable<Long, String> userList = new Hashtable<Long, String>();
+
+
+    private static List<IClientEvents> events = new ArrayList<IClientEvents>();
+
+    public void addCallback(IClientEvents e) {
+        events.add(e);
+    }
 
     public boolean isConnected() {
         if (server == null) {
@@ -52,16 +63,21 @@ public enum Client {
      * 
      * @param address
      * @param port
+     * @param username
+     * @param callback (for triggering UI events)
      * @return true if connection was successful
      */
-    private boolean connect(String address, int port) {
+    public boolean connect(String address, int port, String username, IClientEvents callback) {
+        // TODO validate
+        this.clientName = username;
+        addCallback(callback);
         try {
             server = new Socket(address, port);
             // channel to send to server
             out = new ObjectOutputStream(server.getOutputStream());
             // channel to listen to server
             in = new ObjectInputStream(server.getInputStream());
-            logger.info(TextFX.colorize("Client connected",Color.PURPLE));
+            logger.info("Client connected");
             listenForServerPayload();
             sendConnect();
         } catch (UnknownHostException e) {
@@ -72,139 +88,28 @@ public enum Client {
         return isConnected();
     }
 
-    /**
-     * <p>
-     * Check if the string contains the <i>connect</i> command
-     * followed by an ip address and port or localhost and port.
-     * </p>
-     * <p>
-     * Example format: 123.123.123:3000
-     * </p>
-     * <p>
-     * Example format: localhost:3000
-     * </p>
-     * https://www.w3schools.com/java/java_regex.asp
-     * 
-     * @param text
-     * @return
-     */
-    @Deprecated // remove in Milestone3
-    private boolean isConnection(String text) {
-        // https://www.w3schools.com/java/java_regex.asp
-        return text.matches(ipAddressPattern)
-                || text.matches(localhostPattern);
-    }
 
-    @Deprecated // remove in Milestone3
-    private boolean isQuit(String text) {
-        return text.equalsIgnoreCase("/quit");
-    }
-
-    @Deprecated // remove in Milestone3
-    private boolean isName(String text) {
-        if (text.startsWith("/name")) {
-            String[] parts = text.split(" ");
-            if (parts.length >= 2) {
-                clientName = parts[1].trim();
-                System.out.println(TextFX.colorize("Name set to " + clientName, Color.PURPLE));
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Controller for handling various text commands from the client
-     * <p>
-     * Add more here as needed
-     * </p>
-     * 
-     * @param text
-     * @return true if a text was a command or triggered a command
-     */
-    @Deprecated // removing in Milestone3
-    private boolean processClientCommand(String text) throws IOException {
-        if (isConnection(text)) {
-            if (clientName.isBlank()) {
-                System.out.println("You must set your name before you can connect via: /name your_name");
-                return true;
-            }
-            // replaces multiple spaces with single space
-            // splits on the space after connect (gives us host and port)
-            // splits on : to get host as index 0 and port as index 1
-            String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
-            connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
-            return true;
-        } else if (isQuit(text)) {
-            sendDisconnect();
-            isRunning = false;
-            return true;
-        } else if (isName(text)) {
-            return true;
-        } else if (text.startsWith("/joinroom")) {
-            String roomName = text.replace("/joinroom", "").trim();
-            sendJoinRoom(roomName);
-            return true;
-        } else if (text.startsWith("/createroom")) {
-            String roomName = text.replace("/createroom", "").trim();
-            sendCreateRoom(roomName);
-            return true;
-        } else if (text.startsWith("/rooms")) {
-            String query = text.replace("/rooms", "").trim();
-            sendListRooms(query);
-            return true;
-        } else if (text.startsWith("/guessletter")){ //comand to send a letter guess cms27 11/11/2023
-            String guess = text.replace("/guessletter","").trim();
-            guess.substring(0,1);
-            sendGuessLetter(guess);
-            return true;
-        }else if (text.startsWith("/guessword")){ //comand to send a word guess     cms27 11/11/2023
-            String guessWord = text.replace("/guessword", "").trim();
-            sendGuessWord(guessWord);
-            return true;
-        }else if (text.equalsIgnoreCase("/users")) {
-            Iterator<Entry<Long, String>> iter = userList.entrySet().iterator();
-            System.out.println("Listing Local User List:");
-            if (userList.size() == 0) {
-                System.out.println("No local users in list");
-            }
-            while (iter.hasNext()) {
-                Entry<Long, String> user = iter.next();
-                System.out.println(String.format("%s[%s]", user.getValue(), user.getKey()));
-            }
-            return true;
-        }else if(text.equalsIgnoreCase("/ready")){
-            sendReadyStatus();
-            return true;
-        }else if(text.equalsIgnoreCase("/skip")){
-            sendSkipStatus();
-            return true;
-        }
-        return false;
-    }
-
-    // Send methods
-
-    protected void sendReadyStatus() throws IOException { //added from ready check Cristian Sinchi cms27
+    public void sendReadyStatus() throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.READY);
         out.writeObject(p);
     }
-    protected void sendListRooms(String query) throws IOException {
+
+    public void sendListRooms(String query) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.GET_ROOMS);
         p.setMessage(query);
         out.writeObject(p);
     }
 
-    protected void sendJoinRoom(String roomName) throws IOException {
+    public void sendJoinRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
         p.setMessage(roomName);
         out.writeObject(p);
     }
 
-    protected void sendCreateRoom(String roomName) throws IOException {
+    public void sendCreateRoom(String roomName) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.CREATE_ROOM);
         p.setMessage(roomName);
@@ -224,33 +129,7 @@ public enum Client {
         out.writeObject(p);
     }
 
-    //  Send Game Related Payloads Begin
-
-    protected void sendGuessLetter(String guess) throws IOException { //client method to send guess letter payload
-        Payload p = new Payload();
-        p.setPayloadType(PayloadType.GUESS_LETTER);
-        p.setMessage(guess);
-        p.setClientName(clientName);
-        out.writeObject(p);
-    }
-
-    protected void sendGuessWord(String guess) throws IOException { //client method to send guess word payload
-        Payload p = new Payload();
-        p.setPayloadType(PayloadType.GUESS_WORD);
-        p.setClientName(clientName);
-        p.setMessage(guess);
-        out.writeObject(p);
-    }
-
-    protected void sendSkipStatus() throws IOException { //client method to send skip payload
-        Payload p = new Payload();
-        p.setPayloadType(PayloadType.SKIP);
-        out.writeObject(p);
-    }
-
-    //  Send Game Related Payloads End
-
-    protected void sendMessage(String message) throws IOException {
+    public void sendMessage(String message) throws IOException {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
         p.setMessage(message);
@@ -259,46 +138,34 @@ public enum Client {
     }
 
     // end send methods
-    @Deprecated // remove in Milestone3
-    private void listenForKeyboard() {
-        inputThread = new Thread() {
-            @Override
-            public void run() {
-                logger.info(TextFX.colorize("Listening for input",Color.BLUE));
-                try (Scanner si = new Scanner(System.in);) {
-                    String line = "";
-                    isRunning = true;
-                    while (isRunning) {
-                        try {
-                            logger.info(TextFX.colorize("Waiting for input",Color.BLUE));
-                            line = si.nextLine();
-                            if (!processClientCommand(line)) {
-                                if (isConnected()) {
-                                    if (line != null && line.trim().length() > 0) {
-                                        sendMessage(line);
-                                    }
+    
+    //  Send Game Related Payloads Begin
 
-                                } else {
-                                    logger.info("Not connected to server");
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.warning(TextFX.colorize("Connection dropped",Color.RED));
-                            break;
-                        }
-                    }
-                    logger.info(TextFX.colorize("Exited loop",Color.BLUE));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    close();
-                }
-            }
-        };
-        inputThread.start();
+    public void sendGuessLetter(String guess) throws IOException { //client method to send guess letter payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.GUESS_LETTER);
+        p.setMessage(guess);
+        p.setClientName(clientName);
+        out.writeObject(p);
     }
 
+    public void sendGuessWord(String guess) throws IOException { //client method to send guess word payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.GUESS_WORD);
+        p.setClientName(clientName);
+        p.setMessage(guess);
+        out.writeObject(p);
+    }
+
+    public void sendSkipStatus() throws IOException { //client method to send skip payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.SKIP);
+        out.writeObject(p);
+    }
+
+    //  Send Game Related Payloads End
     private void listenForServerPayload() {
+        isRunning = true;
         fromServerThread = new Thread() {
             @Override
             public void run() {
@@ -325,7 +192,7 @@ public enum Client {
         fromServerThread.start();// start the thread
     }
 
-    protected String getClientNameById(long id) {
+    public String getClientNameById(long id) {
         if (userList.containsKey(id)) {
             return userList.get(id);
         }
@@ -349,6 +216,10 @@ public enum Client {
                 System.out.println(String.format(TextFX.colorize("*%s %s*", Color.PURPLE),
                         p.getClientName(),
                         p.getMessage()));
+                events.forEach(e -> {
+                    e.onClientConnect(p.getClientId(), p.getClientName(), p.getMessage());
+                });
+
                 break;
             case DISCONNECT:
                 if (userList.containsKey(p.getClientId())) {
@@ -360,23 +231,40 @@ public enum Client {
                 System.out.println(String.format(TextFX.colorize("*%s %s*",Color.RED),
                         p.getClientName(),
                         p.getMessage()));
+                events.forEach(e -> {
+                    e.onClientDisconnect(p.getClientId(), p.getClientName(), p.getMessage());
+                });
+
                 break;
             case SYNC_CLIENT:
                 if (!userList.containsKey(p.getClientId())) {
                     userList.put(p.getClientId(), p.getClientName());
                 }
+                events.forEach(e -> {
+                    e.onSyncClient(p.getClientId(), p.getClientName());
+                });
+
                 break;
             case MESSAGE:
                 System.out.println(String.format(TextFX.colorize("%s:",Color.YELLOW) + " %s",
                         getClientNameById(p.getClientId()),
                         p.getMessage()));
+                events.forEach(e -> {
+                    e.onMessageReceive(p.getClientId(), p.getMessage());
+                });
+
                 break;
             case CLIENT_ID:
                 if (myClientId == Constants.DEFAULT_CLIENT_ID) {
                     myClientId = p.getClientId();
+                    //userList.put(myClientId, myPlayer);
                 } else {
                     logger.warning("Receiving client id despite already being set");
                 }
+                events.forEach(e -> {
+                    e.onReceiveClientId(p.getClientId());
+                });
+
                 break;
             case GET_ROOMS:
                 RoomResultPayload rp = (RoomResultPayload) p;
@@ -388,29 +276,102 @@ public enum Client {
                         System.out.println(String.format(TextFX.colorize("%s)",Color.GREEN)+TextFX.colorize(" %s", Color.PURPLE), (i + 1), rp.getRooms()[i]));
                     }
                 }
+                events.forEach(e -> {
+                    e.onReceiveRoomList(rp.getRooms(), rp.getMessage());
+                });
+
                 break;
-            case READY: //Added from Ready Set
-                    System.out.println(String.format(TextFX.colorize("Player %s is ready",Color.BLUE), getClientNameById(p.getClientId())));
-                    break;
-            case PHASE: //Added from Ready Set
-                    System.out.println(String.format(TextFX.colorize("The current phase is %s",Color.PURPLE), p.getMessage()));
-                    break;
-            case TURN:
-                    System.out.println(String.format(TextFX.colorize("Current Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
-                    break;
-            case RESET_USER_LIST: //Added from Ready Set
+            case RESET_USER_LIST:
                 userList.clear();
+                events.forEach(e -> {
+                    e.onResetUserList();
+                });
+
                 break;
+            case READY:
+                System.out.println(String.format(TextFX.colorize("Player %s is ready",Color.BLUE), getClientNameById(p.getClientId())));
+                events.forEach(e -> {
+                    if (e instanceof IGameEvents) {
+                        ((IGameEvents) e).onReceiveReady(p.getClientId());
+                    }
+                });
+                break;
+            case PHASE:
+                System.out.println(String.format(TextFX.colorize("The current phase is %s",Color.PURPLE), p.getMessage()));
+                events.forEach(e -> {
+                    if (e instanceof IGameEvents) {
+                        ((IGameEvents) e).onReceivePhase(Enum.valueOf(Phase.class, p.getMessage()));
+                    }
+                });
+                break;
+           
+            case TURN:
+                System.out.println(String.format(TextFX.colorize("Current Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
+               
+                 events.forEach(e -> { //add for client ui interface
+                  if (e instanceof IGameEvents) {
+                    ((IGameEvents) e).onReceiveTurn(getClientNameById(p.getClientId()));
+                  }
+                 });
+                 
+                break;
+            
+            case TIME: //New Payload handling methods for GamePanel UI  cms27 11/27/23
+                events.forEach(e -> { 
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveTime(p.getMessage());
+                  }
+                 });
+                
+                 break;
+
+            case BLANK_WORD:
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveBlankWord(p.getMessage());
+                  }
+                 });
+
+                 break;
+            case LETTER_STAT:
+                 LetterStatPayload lp = (LetterStatPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveLetterStat(lp.getMessage(),lp.getStat());
+                  }
+                 });
+
+                 break;
+            case RANKED_PLAYERS:
+                 RankedPlayersPayload pp = (RankedPlayersPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveRankedPlayers(pp.getPlayers());
+                  }
+                 });
+
+                 break;
+            case ROUND:
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveRound(p.getMessage());
+                  }
+                 });
+                 
+                 break;
+            case STRIKE:
+                events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveStrike(p.getMessage());
+                  }
+                 });
+
+                 break;
             default:
-                logger.warning(String.format(TextFX.colorize("Unhandled Payload type: %s",Color.RED), p.getPayloadType()));
+                logger.warning(String.format("Unhandled Payload type: %s", p.getPayloadType()));
                 break;
 
         }
-    }
-
-    @Deprecated // removing in Milestone3
-    public void start() throws IOException {
-        listenForKeyboard();
     }
 
     private void close() {
@@ -454,15 +415,4 @@ public enum Client {
             System.out.println("Server was never opened so this exception is ok");
         }
     }
-
-    @Deprecated // removing in Milestone3
-    public static void main(String[] args) {
-        try {
-            // if start is private, it's valid here since this main is part of the class
-            Client.Instance.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

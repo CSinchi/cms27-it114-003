@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.Time;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import Project.client.views.LetterGridPanel;
 import Project.common.Constants;
+import Project.common.LetterStatPayload;
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.Phase;
+import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
@@ -102,13 +106,54 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
-    public boolean sendRoomName(String name) {
+    public boolean sendTimer(String time) { //sends TIME
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.TIME);
+        p.setMessage(time);
+        return send(p);
+    }
+    //New send Methods for Milestone 3 cms27 11/26/23
+    public boolean sendRound(String round) { //sends ROUND
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.ROUND);
+        p.setMessage(round);
+        return send(p);
+    }
+
+    public boolean sendStrike(String strike) { //sends STRIKE
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.STRIKE);
+        p.setMessage(strike);
+        return send(p);
+    }
+
+    public boolean sendBlankWord(String word) { //sends BLANK_WORD
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.BLANK_WORD);
+        p.setMessage(word);
+        return send(p);
+    }
+
+    public boolean sendRoomName(String name) { 
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
         p.setMessage(name);
         return send(p);
     }
 
+    public boolean sendLetterStat(String letter, Boolean isCorrect) { //sends LETTERSTAT
+        LetterStatPayload payload = new LetterStatPayload();
+        payload.setStat(isCorrect);
+        payload.setMessage(letter);
+        return send(payload);
+    }
+
+    public boolean sendRankedPlayers(String[] players) {
+        RankedPlayersPayload payload = new RankedPlayersPayload();
+        payload.setPlayers(players);
+        return send(payload);
+    }
+    
     public boolean sendRoomsList(String[] rooms, String message) {
         RoomResultPayload payload = new RoomResultPayload();
         payload.setRooms(rooms);

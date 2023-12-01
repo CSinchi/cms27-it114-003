@@ -6,6 +6,7 @@ import Project.common.Player;
 public class ServerPlayer extends Player {
     private ServerThread client;
     private int score;
+    private int placement;
 
     public void setClient(ServerThread client) {
         this.client = client;
@@ -26,7 +27,14 @@ public class ServerPlayer extends Player {
     public void addScore (int score) { 
         this.score += score;
     }
+    
+    public void setPlacement(int placement){
+        this.placement = placement;
+    }
 
+    public int getPlacement(){
+        return placement;
+    }
     public ServerPlayer(ServerThread client) {
         setClient(client);
     }
