@@ -106,42 +106,42 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
-    public boolean sendTimer(String time) {
+    public boolean sendTimer(String time) { //sends TIME
         Payload p = new Payload();
         p.setPayloadType(PayloadType.TIME);
         p.setMessage(time);
         return send(p);
     }
-
-    public boolean sendRound(String round) {
+    //New send Methods for Milestone 3 cms27 11/26/23
+    public boolean sendRound(String round) { //sends ROUND
         Payload p = new Payload();
         p.setPayloadType(PayloadType.ROUND);
         p.setMessage(round);
         return send(p);
     }
 
-    public boolean sendStrike(String strike) {
+    public boolean sendStrike(String strike) { //sends STRIKE
         Payload p = new Payload();
         p.setPayloadType(PayloadType.STRIKE);
         p.setMessage(strike);
         return send(p);
     }
 
-    public boolean sendBlankWord(String word) {
+    public boolean sendBlankWord(String word) { //sends BLANK_WORD
         Payload p = new Payload();
         p.setPayloadType(PayloadType.BLANK_WORD);
         p.setMessage(word);
         return send(p);
     }
 
-    public boolean sendRoomName(String name) {
+    public boolean sendRoomName(String name) { 
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
         p.setMessage(name);
         return send(p);
     }
 
-    public boolean sendLetterStat(String letter, Boolean isCorrect) {
+    public boolean sendLetterStat(String letter, Boolean isCorrect) { //sends LETTERSTAT
         LetterStatPayload payload = new LetterStatPayload();
         payload.setStat(isCorrect);
         payload.setMessage(letter);
@@ -153,6 +153,7 @@ public class ServerThread extends Thread {
         payload.setPlayers(players);
         return send(payload);
     }
+    
     public boolean sendRoomsList(String[] rooms, String message) {
         RoomResultPayload payload = new RoomResultPayload();
         payload.setRooms(rooms);

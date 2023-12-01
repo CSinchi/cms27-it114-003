@@ -24,7 +24,7 @@ public class HangmanGame {
     private boolean isRoundFinished;    
 
     public HangmanGame() {  //cms27 11/13/2023
-        isGameRunning = true; // Resetting/Setting game data
+        isGameRunning = true; // Setting game data
         currentRound = 1;
         shuffleList(WordsList);
         currentWordListIter = WordsList.iterator();
@@ -33,10 +33,10 @@ public class HangmanGame {
 
     private void setGameRound(Iterator<String> iterator) {  //Sets up game round.
         if(iterator.hasNext() && currentRound <= Constants.HANGMAN_MAX_ROUNDS) { //will continue if it has more items and it has not reached max rounds
-            hangManStrikes = 0;
-            currentWord = iterator.next();
-            blankCurrentWordArr = createBlankArr();//sets up blank current word arr
-            isRoundFinished = false;
+            hangManStrikes = 0;  //Re/Setting round data
+            currentWord = iterator.next(); //pick next word from iterator
+            blankCurrentWordArr = createBlankArr();//sets up blank current word array
+            isRoundFinished = false; 
         }
         else{
             isGameCompleted = true;

@@ -26,6 +26,9 @@ import Project.client.Client;
 import Project.client.ClientUtils;
 import Project.client.ICardControls;
 
+//From Drawing Grid Project
+
+
 public class ChatPanel extends JPanel {
     private static Logger logger = Logger.getLogger(ChatPanel.class.getName());
     private JPanel chatArea = null;

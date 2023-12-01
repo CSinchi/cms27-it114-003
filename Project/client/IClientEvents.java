@@ -1,5 +1,8 @@
 package Project.client;
 
+//From Drawing Grid Project
+
+
 public interface IClientEvents {
     /**
      * Triggered when a client connects

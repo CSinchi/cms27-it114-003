@@ -2,6 +2,9 @@ package Project.client;
 
 import Project.common.Phase;
 
+//From Drawing Grid Project
+
+
 public interface IGameEvents extends IClientEvents {
     /**
      * Triggered when a player marks themselves ready

@@ -20,6 +20,8 @@ import Project.common.RoomResultPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
 
+//Modifted version from Drawing Grid, adjusted for this project cms27 11/22/23
+
 public enum Client {
     INSTANCE;
 
@@ -32,14 +34,11 @@ public enum Client {
     private Thread inputThread;
     private Thread fromServerThread;
     private String clientName = "";
-    //private ClientPlayer myPlayer = new ClientPlayer();
     private long myClientId = Constants.DEFAULT_CLIENT_ID;
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
-    //private Hashtable<Long, ClientPlayer> userList = new Hashtable<Long, ClientPlayer>();
     private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
-    //Grid clientGrid = new Grid();
 
     private static List<IClientEvents> events = new ArrayList<IClientEvents>();
 
@@ -89,26 +88,6 @@ public enum Client {
         return isConnected();
     }
 
-    // Send methods
-    /*public void sendMove(int x, int y) throws IOException {
-        PositionPayload pp = new PositionPayload();
-        pp.setCoord(x, y);
-        out.writeObject(pp);
-    }
-
-    public void sendLoadCharacter(String characterCode) throws IOException {
-        CharacterPayload cp = new CharacterPayload();
-        Character c = new Character();
-        c.setCode(characterCode);
-        cp.setCharacter(c);
-        out.writeObject(cp);
-    }
-
-    public void sendCreateCharacter(CharacterType characterType) throws IOException {
-        CharacterPayload cp = new CharacterPayload();
-        cp.setCharacterType(characterType);
-        out.writeObject(cp);
-    } */
 
     public void sendReadyStatus() throws IOException {
         Payload p = new Payload();
@@ -329,7 +308,7 @@ public enum Client {
             case TURN:
                 System.out.println(String.format(TextFX.colorize("Current Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
                
-                 events.forEach(e -> {
+                 events.forEach(e -> { //add for client ui interface
                   if (e instanceof IGameEvents) {
                     ((IGameEvents) e).onReceiveTurn(getClientNameById(p.getClientId()));
                   }
@@ -337,8 +316,8 @@ public enum Client {
                  
                 break;
             
-            case TIME:
-                events.forEach(e -> {
+            case TIME: //New Payload handling methods for GamePanel UI  cms27 11/27/23
+                events.forEach(e -> { 
                   if (e instanceof IGameEvents) {
                  ((IGameEvents) e).onReceiveTime(p.getMessage());
                   }

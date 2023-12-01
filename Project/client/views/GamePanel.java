@@ -23,6 +23,9 @@ import Project.client.ICardControls;
 import Project.client.IGameEvents;
 import Project.common.Phase;
 
+//From Drawing Grid Project Heavely modifed for this project
+
+
 public class GamePanel extends JPanel implements IGameEvents {
     private JPanel hgamePanel;
     private CardLayout cardLayout;
@@ -54,7 +57,6 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         createReadyPanel();
-        //createOptionsPanel();  TODO change from characters to turn options
         hgamePanel = new JPanel(new BorderLayout());
         createHGamePanel();
         add(hgamePanel);
@@ -80,44 +82,6 @@ public class GamePanel extends JPanel implements IGameEvents {
         this.add(readyPanel);
     }
 
-    /*private void createOptionsPanel() {
-        JPanel characterOptions = new JPanel();
-        JButton tank = new JButton();
-        tank.setText("Tank");
-        tank.addActionListener(l -> {
-            try {
-                Client.INSTANCE.sendCreateCharacter(CharacterType.TANK);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-        });
-        JButton damage = new JButton();
-        damage.setText("Attacker");
-        damage.addActionListener(l -> {
-            try {
-                Client.INSTANCE.sendCreateCharacter(CharacterType.DAMAGE);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-        });
-        JButton support = new JButton();
-        support.setText("Support");
-        support.addActionListener(l -> {
-            try {
-                Client.INSTANCE.sendCreateCharacter(CharacterType.SUPPORT);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-        });
-        characterOptions.add(tank);
-        characterOptions.add(damage);
-        characterOptions.add(support);
-        add(characterOptions);
-    } */
-
     private void resetView() {
         if (hgamePanel == null) {
             return;
@@ -141,28 +105,28 @@ public class GamePanel extends JPanel implements IGameEvents {
         hgamePanel.repaint(); 
     } 
 
-    private void createTopHGPanel() {
+    private void createTopHGPanel() { //sets up north part of gamepanel     cms27 11/27/23
         JPanel topPanel =new JPanel(new BorderLayout());
 
-        JPanel turnPanel = new JPanel(new BorderLayout());
-        turnStatus = new JLabel("Current Turn:", SwingConstants.LEFT); //Turn Status
-        timer = new JLabel("00"); //Turn Timer
-        turnPanel.add(turnStatus, BorderLayout.WEST);
-        turnPanel.add(timer, BorderLayout.CENTER);
-        topPanel.add(turnPanel, BorderLayout.EAST);
+        JPanel turnPanel = new JPanel(new BorderLayout()); //creates turn panel
+        turnStatus = new JLabel("Current Turn:", SwingConstants.LEFT); //Create Turn Status 
+        timer = new JLabel("00"); //Create Turn Timer
+        turnPanel.add(turnStatus, BorderLayout.WEST);//add turn status to turn panel west
+        turnPanel.add(timer, BorderLayout.CENTER); //add turn timer to turn panel center
+        topPanel.add(turnPanel, BorderLayout.EAST); //add turn panel to top panel east
 
-        round = new JLabel("Round:", SwingConstants.LEFT);
-        topPanel.add(round, BorderLayout.WEST);
+        round = new JLabel("Round:", SwingConstants.LEFT); //Create Round Status
+        topPanel.add(round, BorderLayout.WEST);//add round status to top panel center
 
-        strikes = new JLabel("Strikes:" , SwingConstants.CENTER);
-        topPanel.add(strikes, BorderLayout.CENTER);
+        strikes = new JLabel("Strikes:" , SwingConstants.CENTER); //Create Strikes Status
+        topPanel.add(strikes, BorderLayout.CENTER); //add strike status to top panel east
 
         hgamePanel.add(topPanel, BorderLayout.NORTH);
     }
 
-    private void createBottomHGPanel(){
+    private void createBottomHGPanel(){ //sets up bottom part of game panel     cms27 12/26/23
         JPanel bottomPanel = new JPanel( new BorderLayout());
-        JButton guessWordButton = new JButton("Guess a Word");
+        JButton guessWordButton = new JButton("Guess a Word"); //button that sends guess word data to server
         guessWordButton.addActionListener(l -> {
             try {
                 String word = JOptionPane.showInputDialog(null, "Enter your guess:", "Guess a Word", JOptionPane.PLAIN_MESSAGE);
@@ -174,7 +138,8 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         bottomPanel.add(guessWordButton, BorderLayout.WEST);
-        JButton guessLetterButton = new JButton("Guess a Letter");
+
+        JButton guessLetterButton = new JButton("Guess a Letter"); //button that sends guess letter data to server
         guessLetterButton.addActionListener(l -> {
             try {
                 String[] options = new String[26];
@@ -191,8 +156,8 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         bottomPanel.add(guessLetterButton, BorderLayout.CENTER);
-        //TODO add letter guess
-        JButton skipButton = new JButton("Skip Turn");
+  
+        JButton skipButton = new JButton("Skip Turn"); //button that sends skip data to server
         skipButton.addActionListener(l -> {
             try {
                 Client.INSTANCE.sendSkipStatus();
@@ -205,22 +170,22 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     }
 
-    private void createCenterHGPanel(){
+    private void createCenterHGPanel(){ //sets up center part of gamepanel      cms27 11/27/23 
         JPanel baseCenterPanel = new JPanel(new BorderLayout());//holder for all objects in this center panel
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        blankWord = new JLabel("Blank", SwingConstants.CENTER);
+        JPanel mainPanel = new JPanel(new BorderLayout()); //create core center panel
+        blankWord = new JLabel("Blank", SwingConstants.CENTER); //Create Blank Word holder
        
-        mainPanel.add(blankWord, BorderLayout.WEST);
-        hangmanImage = new HangmanPanel();
-        mainPanel.add(hangmanImage, BorderLayout.EAST);
-        baseCenterPanel.add(mainPanel, BorderLayout.CENTER);
-        hgamePanel.addComponentListener(new ComponentAdapter() {
+        mainPanel.add(blankWord, BorderLayout.WEST);//add blank word to core center west
+        hangmanImage = new HangmanPanel(); //Initalize Hangman images panel 
+        mainPanel.add(hangmanImage, BorderLayout.EAST);//add image panel to core center east
+        baseCenterPanel.add(mainPanel, BorderLayout.CENTER);//add core center to center panel
+        hgamePanel.addComponentListener(new ComponentAdapter() { //listner when the panel is resized 
             @Override
             public void componentResized(ComponentEvent e) {
-                int size = hgamePanel.getWidth() / 20; // Adjust this ratio as needed
-                blankWord.setFont(new Font(blankWord.getFont().getName(),Font.PLAIN, size));
-                hangmanImage.scaleImage(hgamePanel.getWidth() / 3);
+                int size = hgamePanel.getWidth() / 20; //font size for blank
+                blankWord.setFont(new Font(blankWord.getFont().getName(),Font.PLAIN, size)); //sets blank word size
+                hangmanImage.scaleImage(hgamePanel.getWidth() / 3); //scales hangman image size
             }
         });
 

@@ -12,6 +12,9 @@ import javax.swing.JSplitPane;
 import Project.client.Card;
 import Project.client.ICardControls;
 
+//From Drawing Grid Project
+
+
 public class ChatGamePanel extends JPanel {
     private ChatPanel chatPanel;
     private GamePanel gamePanel;

@@ -23,6 +23,9 @@ import Project.client.views.RoomsPanel;
 import Project.client.views.UserInputPanel;
 import Project.common.Constants;
 
+//From Drawing Grid Project
+
+
 public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     CardLayout card = null;// accessible so we can call next() and previous()
     Container container;// accessible to be passed to card methods

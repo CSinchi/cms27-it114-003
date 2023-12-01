@@ -8,6 +8,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+//From Drawing Grid Project
+
 public abstract class ClientUtils {
     /***
      * Attempts to calculate the necessary dimensions for a potentially wrapped
