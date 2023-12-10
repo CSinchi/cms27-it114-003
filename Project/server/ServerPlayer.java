@@ -7,6 +7,7 @@ public class ServerPlayer extends Player {
     private ServerThread client;
     private int score;
     private int placement;
+    private boolean isAway = false; 
 
     public void setClient(ServerThread client) {
         this.client = client;
@@ -37,5 +38,13 @@ public class ServerPlayer extends Player {
     }
     public ServerPlayer(ServerThread client) {
         setClient(client);
+    }
+
+    public boolean getAwayStatus() {
+        return isAway;
+    }
+
+    public void setAwayStatus(boolean isAway) {
+        this.isAway = isAway;
     }
 }

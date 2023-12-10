@@ -37,6 +37,8 @@ public enum Client {
     private long myClientId = Constants.DEFAULT_CLIENT_ID;
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
+    private boolean isMarkedAway = false;
+
     private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
 
@@ -161,6 +163,13 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.SKIP);
         out.writeObject(p);
+    }
+
+    public void sendAwayStatus() throws IOException {//cleint method to send away payload
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.AWAY);
+        out.writeObject(p);
+
     }
 
     //  Send Game Related Payloads End
@@ -308,11 +317,11 @@ public enum Client {
             case TURN:
                 System.out.println(String.format(TextFX.colorize("Current Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
                
-                 events.forEach(e -> { //add for client ui interface
-                  if (e instanceof IGameEvents) {
+                events.forEach(e -> { //add for client ui interface
+                if (e instanceof IGameEvents) {
                     ((IGameEvents) e).onReceiveTurn(getClientNameById(p.getClientId()));
-                  }
-                 });
+                }
+                });
                  
                 break;
             

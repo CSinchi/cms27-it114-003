@@ -306,6 +306,18 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     //Serverplayer methods
 
+    private ServerPlayer findPlayer (ServerThread client){
+        Iterator<ServerPlayer> iter = players.values().stream().iterator();
+        while (iter.hasNext())
+        {
+            ServerPlayer player = iter.next();
+            if(player.getClient().getClientId() == client.getClientId()){
+                return player;
+            }
+        }
+        return null;
+    }
+
     private void scorePlayer(ServerPlayer player, int score) {  //score handling method cms27 11/15/2023
         player.addScore(score);
         logger.info(String.format(TextFX.colorize("%s scored %d points", Color.PURPLE),player.getClient().getClientName(), score));
@@ -450,6 +462,12 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         sendMessage(null,client.getClientName()+" skipped thier turned!");
         logger.info(TextFX.colorize("nextTurn invoked from normal skip", Color.YELLOW));
         nextTurn();
+    }
+
+    protected void handleAway(ServerThread client) {
+        ServerPlayer player = findPlayer(client);
+        player.setAwayStatus(true);
+        sendMessage(null, client.getClientName() + " marked themselves away");
     }
 
      public boolean hasLetters (String str) { //function that will return false if a character in the string is not a letter    cms27 11/16/2023

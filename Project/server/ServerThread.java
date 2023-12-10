@@ -292,6 +292,9 @@ public class ServerThread extends Thread {
                 e.printStackTrace();
                 }
                 break;
+            case AWAY:
+                ((GameRoom) currentRoom).handleSkip(this);
+                break;
             default:
                 break;
 
