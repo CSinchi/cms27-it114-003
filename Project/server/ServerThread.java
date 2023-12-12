@@ -293,7 +293,7 @@ public class ServerThread extends Thread {
                 }
                 break;
             case AWAY:
-                ((GameRoom) currentRoom).handleSkip(this);
+                ((GameRoom) currentRoom).handleAway(this);
                 break;
             default:
                 break;

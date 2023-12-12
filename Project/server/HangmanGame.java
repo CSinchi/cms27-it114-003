@@ -174,5 +174,9 @@ public class HangmanGame {
         }
         return sb.toString().trim();
     }
+
+    protected void removeOneStrike() {
+        hangManStrikes--;
+    }
     
 }

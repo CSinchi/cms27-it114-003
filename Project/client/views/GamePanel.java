@@ -204,18 +204,20 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     private void createRightHGPanel(){
         rankedPlayers = new RankedPlayers();
-        JPanel rightPanel = new JPanel(new BorderLayout());
+        JPanel mainrightPanel = new JPanel(new BorderLayout());
+        JPanel centerrightPanel = new JPanel(new BorderLayout());
         JButton awayButton = new JButton("Mark Away"); //button that sends skip data to server
         awayButton.addActionListener(l -> {
             try {
-                Client.INSTANCE.sendSkipStatus();
+                Client.INSTANCE.sendAwayStatus();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
         });
-        rightPanel.add(awayButton, BorderLayout.SOUTH);
-        rightPanel.add(rankedPlayers, BorderLayout.CENTER);
-        hgamePanel.add(rightPanel, BorderLayout.EAST);
+        mainrightPanel.add(awayButton, BorderLayout.SOUTH);
+        centerrightPanel.add(rankedPlayers, BorderLayout.NORTH);
+        mainrightPanel.add(centerrightPanel,BorderLayout.CENTER);
+        hgamePanel.add(mainrightPanel, BorderLayout.EAST);
         //hgamePanel.add(rankedPlayers, BorderLayout.EAST);
     }
 
