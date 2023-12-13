@@ -11,6 +11,7 @@ public abstract class Constants {
     public static final int HANGMAN_MAX_SCORE = 20;
     public static final int HANGMAN_MAX_STRIKES = 6;
     public static final int HANGMAN_MAX_ROUNDS = 5;
+    public static final char[] HANGMAN_EXTRA_POINTS_LETTER_LIST = {'m', 'h', 'g', 'b', 'f', 'y', 'w', 'k', 'v', 'x', 'z', 'j', 'q'};
     public static final String[] HANGMAN_DEFAULT_WORDLIST = {"elevator", "courage", "currency", "manager", "library", "homework", "liability", "protection", "vigorous", "tumble",
     "despair", "miracle", "barrier", "authority", "ancestor", "glance", "uniform", "infinite", "bronze" , "imposter" , "student", "gravity" , "reaction", "falsify"};
 }

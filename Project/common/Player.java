@@ -6,6 +6,7 @@ public class Player {
     private boolean isReady = false;
     private boolean wantsHardMode = false;
     private boolean wantsForgiveOp = false;
+    private boolean isSpectating = true;
 
     public void setReady(boolean isReady) {
         this.isReady = isReady;
@@ -29,6 +30,14 @@ public class Player {
 
     public boolean wantsForgiveOp() {
         return wantsForgiveOp;
+    }
+
+    public void setIsSpectating(boolean isSpectating) {
+        this.isSpectating = isSpectating;
+    }
+
+    public boolean isSpectating() {
+        return isSpectating;
     }
 
 }

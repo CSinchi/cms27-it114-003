@@ -36,4 +36,6 @@ public interface IGameEvents extends IClientEvents {
     void onReceiveRankedPlayers(String[] players);
 
     void onReceiveStrike(String strike);
+
+    void onReceiveSpectators(String[] spectators);
 }

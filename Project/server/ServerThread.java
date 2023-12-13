@@ -16,6 +16,7 @@ import Project.common.PayloadType;
 import Project.common.Phase;
 import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
+import Project.common.SpectatorsPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
 
@@ -153,7 +154,11 @@ public class ServerThread extends Thread {
         payload.setPlayers(players);
         return send(payload);
     }
-    
+    public boolean sendSpectators(String[] spectators) {
+        SpectatorsPayload payload = new SpectatorsPayload();
+        payload.setSpectators(spectators);
+        return send(payload);
+    }
     public boolean sendRoomsList(String[] rooms, String message) {
         RoomResultPayload payload = new RoomResultPayload();
         payload.setRooms(rooms);
@@ -259,7 +264,17 @@ public class ServerThread extends Thread {
                 break;
             case MESSAGE:
                 if (currentRoom != null) {
-                    currentRoom.sendMessage(this, p.getMessage());
+                    if(currentRoom.getName() != Constants.LOBBY) {
+                        if (((GameRoom) currentRoom).isClientSpectating(this) && ((GameRoom) currentRoom).currentPhase != Phase.READY ) {
+                            sendMessage(Constants.DEFAULT_CLIENT_ID, "You're not allowed to send messages while spectating");
+                        }
+                        else {
+                            currentRoom.sendMessage(this, p.getMessage());
+                        }
+                    } else {
+                        currentRoom.sendMessage(this, p.getMessage());
+                    }
+                    
                 } else {
                     // TODO migrate to lobby
                     logger.log(Level.INFO, "Migrating to lobby on message with null room");
@@ -294,6 +309,12 @@ public class ServerThread extends Thread {
                 break;
             case AWAY:
                 ((GameRoom) currentRoom).handleAway(this);
+                break;
+            case HARD_MODE:
+                ((GameRoom) currentRoom).setHardMode(this);
+                break;
+            case FORGIVE_OP:
+                ((GameRoom) currentRoom).setForgiveOption(this);
                 break;
             default:
                 break;

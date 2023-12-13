@@ -37,6 +37,7 @@ public class GamePanel extends JPanel implements IGameEvents {
     private JLabel strikes;
     private LetterGridPanel letterGrid;
     private RankedPlayers rankedPlayers;
+    private RankedPlayers spectatorsList;
     private HangmanPanel hangmanImage;
 
     public GamePanel(ICardControls controls) {
@@ -68,6 +69,7 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     private void createReadyPanel() {
         JPanel readyPanel = new JPanel();
+
         JButton readyButton = new JButton();
         readyButton.setText("Ready");
         readyButton.addActionListener(l -> {
@@ -79,6 +81,31 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         readyPanel.add(readyButton);
+
+        JButton hardModeButton = new JButton();
+        hardModeButton.setText("Hard Mode");
+        hardModeButton.addActionListener(l -> {
+            try {
+                Client.INSTANCE.sendHardMode();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
+        readyPanel.add(hardModeButton);
+
+        JButton forgiveOptionButton = new JButton();
+        forgiveOptionButton.setText("Forgive Option");
+        forgiveOptionButton.addActionListener(l -> {
+            try {
+                Client.INSTANCE.sendForgiveOption();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
+        readyPanel.add(forgiveOptionButton);
+
         this.add(readyPanel);
     }
 
@@ -204,8 +231,17 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     private void createRightHGPanel(){
         rankedPlayers = new RankedPlayers();
+        spectatorsList = new RankedPlayers();
+
+        JLabel rankLabel = new JLabel("Rankings:");
+        JLabel spectatorsLabel = new JLabel("Spectating:");
+
         JPanel mainrightPanel = new JPanel(new BorderLayout());
-        JPanel centerrightPanel = new JPanel(new BorderLayout());
+        JPanel centerRightPanel = new JPanel(new BorderLayout());
+
+        JPanel centerTopPanel = new JPanel(new BorderLayout());
+        JPanel centerBottomPanel = new JPanel(new BorderLayout());
+
         JButton awayButton = new JButton("Mark Away"); //button that sends skip data to server
         awayButton.addActionListener(l -> {
             try {
@@ -215,8 +251,17 @@ public class GamePanel extends JPanel implements IGameEvents {
             }
         });
         mainrightPanel.add(awayButton, BorderLayout.SOUTH);
-        centerrightPanel.add(rankedPlayers, BorderLayout.NORTH);
-        mainrightPanel.add(centerrightPanel,BorderLayout.CENTER);
+
+        centerTopPanel.add(rankLabel, BorderLayout.NORTH); //Adding compoments to center top
+        centerTopPanel.add(rankedPlayers, BorderLayout.CENTER);
+
+        centerBottomPanel.add(spectatorsLabel, BorderLayout.NORTH); //adding compoments to center bottom
+        centerBottomPanel.add(spectatorsList, BorderLayout.CENTER);
+
+        centerRightPanel.add(centerTopPanel, BorderLayout.CENTER);//adding all center items
+        centerRightPanel.add(centerBottomPanel, BorderLayout.SOUTH);
+
+        mainrightPanel.add(centerRightPanel,BorderLayout.CENTER); 
         hgamePanel.add(mainrightPanel, BorderLayout.EAST);
         //hgamePanel.add(rankedPlayers, BorderLayout.EAST);
     }
@@ -256,8 +301,7 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     @Override
     public void onReceivePhase(Phase phase) {
-        // I'll temporarily do next(), but there may be scenarios where the screen can
-        // be inaccurate
+
         System.out.println("Received phase: " + phase.name());
         if (phase == Phase.READY) {
             if (!isVisible()) {
@@ -269,7 +313,23 @@ public class GamePanel extends JPanel implements IGameEvents {
                 cardLayout.next(this);
             }
         } else if (phase == Phase.IN_PROGRESS) {
-            cardLayout.next(this);
+            if (!isVisible()) {
+                setVisible(true);
+                this.getParent().revalidate();
+                this.getParent().repaint();
+                System.out.println("GamePanel visible");
+                cardLayout.next(this);
+            } else {
+                cardLayout.next(this);
+            }       
+        } else {
+            if (!isVisible()) {
+                setVisible(true);
+                this.getParent().revalidate();
+                this.getParent().repaint();
+                System.out.println("GamePanel visible");
+                cardLayout.next(this);
+            }
         }
     }
 
@@ -313,6 +373,12 @@ public class GamePanel extends JPanel implements IGameEvents {
 
     public void onReceiveRankedPlayers(String[] players) {
         rankedPlayers.displayRankings(players);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
+
+    public void onReceiveSpectators(String[] spectators) {
+        spectatorsList.displayRankings(spectators);
         hgamePanel.revalidate();
         hgamePanel.repaint();
     }

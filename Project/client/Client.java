@@ -17,6 +17,7 @@ import Project.common.PayloadType;
 import Project.common.Phase;
 import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
+import Project.common.SpectatorsPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
 
@@ -169,7 +170,18 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.AWAY);
         out.writeObject(p);
+    }
 
+    public void sendHardMode() throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.HARD_MODE);
+        out.writeObject(p);
+    }
+
+    public void sendForgiveOption() throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.FORGIVE_OP);
+        out.writeObject(p);
     }
 
     //  Send Game Related Payloads End
@@ -356,6 +368,15 @@ public enum Client {
                  events.forEach(e -> {
                   if (e instanceof IGameEvents) {
                  ((IGameEvents) e).onReceiveRankedPlayers(pp.getPlayers());
+                  }
+                 });
+
+                 break;
+            case SPECTATOR:
+                 SpectatorsPayload sp = (SpectatorsPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveSpectators(sp.getSpectators());
                   }
                  });
 
