@@ -17,6 +17,7 @@ import Project.common.PayloadType;
 import Project.common.Phase;
 import Project.common.RankedPlayersPayload;
 import Project.common.RoomResultPayload;
+import Project.common.SpectatorsPayload;
 import Project.common.TextFX;
 import Project.common.TextFX.Color;
 
@@ -37,7 +38,7 @@ public enum Client {
     private long myClientId = Constants.DEFAULT_CLIENT_ID;
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
-    private boolean isMarkedAway = false;
+    public boolean isMarkedAway = false;
 
     private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
@@ -169,7 +170,18 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.AWAY);
         out.writeObject(p);
+    }
 
+    public void sendHardMode() throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.HARD_MODE);
+        out.writeObject(p);
+    }
+
+    public void sendForgiveOption() throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.FORGIVE_OP);
+        out.writeObject(p);
     }
 
     //  Send Game Related Payloads End
@@ -324,6 +336,23 @@ public enum Client {
                 });
                  
                 break;
+            case AWAY:
+                System.out.println(String.format(TextFX.colorize("Away Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
+               
+                if (myClientId == p.getClientId()) {
+                    if (!isMarkedAway) {
+                        isMarkedAway = true;
+                    } else {
+                        isMarkedAway = false;
+                    }
+                }
+                events.forEach(e -> { 
+                if (e instanceof IGameEvents) {
+                    ((IGameEvents) e).onReceiveAway();
+                }
+                }); 
+
+                break;
             
             case TIME: //New Payload handling methods for GamePanel UI  cms27 11/27/23
                 events.forEach(e -> { 
@@ -356,6 +385,15 @@ public enum Client {
                  events.forEach(e -> {
                   if (e instanceof IGameEvents) {
                  ((IGameEvents) e).onReceiveRankedPlayers(pp.getPlayers());
+                  }
+                 });
+
+                 break;
+            case SPECTATOR:
+                 SpectatorsPayload sp = (SpectatorsPayload) p;
+                 events.forEach(e -> {
+                  if (e instanceof IGameEvents) {
+                 ((IGameEvents) e).onReceiveSpectators(sp.getSpectators());
                   }
                  });
 

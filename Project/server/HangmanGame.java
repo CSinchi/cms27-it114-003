@@ -89,14 +89,23 @@ public class HangmanGame {
     }
     
     protected int guessedLettersScore(char guess){ //return the score the player earned based on how letters it fills (Must use with isLetterCorrect in GameRoom)
+        //modified to set 2x multipler if guess was lettercheck     cms27  12/12/2023
         char[] explodedCurrentWord = currentWord.toCharArray(); //sets another char array as a comparason to blank word array
         int amount = 0;
+        int scoreMulti = 1;
+        char[] letterCheck = Constants.HANGMAN_EXTRA_POINTS_LETTER_LIST;
         for (int i = 0; i < explodedCurrentWord.length; i++){
             if(guess == explodedCurrentWord[i]){
                 amount++;
             }
         }
-        return amount*Constants.HANGMAN_DEFAULT_SCORE;
+
+        for (int i = 0; i < letterCheck.length; i++) {
+            if (guess == letterCheck[i]) {
+                scoreMulti = 2;
+            }
+        }
+        return amount*Constants.HANGMAN_DEFAULT_SCORE * scoreMulti;
     }
 
     protected int guessedWordScore(String guess) { //return the score the player earned (Must use with isWordCorrect in GameRoom)
@@ -173,6 +182,12 @@ public class HangmanGame {
             sb.append(blankCurrentWordArr[i] + " ");
         }
         return sb.toString().trim();
+    }
+
+    protected void removeOneStrike() {
+        if (hangManStrikes > 0) {
+            hangManStrikes--;
+        }  
     }
     
 }
