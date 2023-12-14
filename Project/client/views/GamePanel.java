@@ -35,6 +35,7 @@ public class GamePanel extends JPanel implements IGameEvents {
     private JLabel blankWord;
     private JLabel round;
     private JLabel strikes;
+    private JButton awayButton;
     private LetterGridPanel letterGrid;
     private RankedPlayers rankedPlayers;
     private RankedPlayers spectatorsList;
@@ -242,14 +243,17 @@ public class GamePanel extends JPanel implements IGameEvents {
         JPanel centerTopPanel = new JPanel(new BorderLayout());
         JPanel centerBottomPanel = new JPanel(new BorderLayout());
 
-        JButton awayButton = new JButton("Mark Away"); //button that sends skip data to server
+        awayButton = new JButton("Mark Away"); //button that sends skip data to server
         awayButton.addActionListener(l -> {
             try {
                 Client.INSTANCE.sendAwayStatus();
+                
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
         });
+    
+
         mainrightPanel.add(awayButton, BorderLayout.SOUTH);
 
         centerTopPanel.add(rankLabel, BorderLayout.NORTH); //Adding compoments to center top
@@ -386,6 +390,16 @@ public class GamePanel extends JPanel implements IGameEvents {
     public void onReceiveStrike(String strike) {
         strikes.setText("Strikes: " + strike);
         hangmanImage.changeImage(strike);
+        hgamePanel.revalidate();
+        hgamePanel.repaint();
+    }
+
+    public void onReceiveAway() {
+        if ("Mark Away".equals(awayButton.getText()) && Client.INSTANCE.isMarkedAway) {
+                awayButton.setText("Unmark Away");
+            } else {
+                awayButton.setText("Mark Away");
+            }
         hgamePanel.revalidate();
         hgamePanel.repaint();
     }

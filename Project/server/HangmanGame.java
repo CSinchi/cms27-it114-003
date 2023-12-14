@@ -89,6 +89,7 @@ public class HangmanGame {
     }
     
     protected int guessedLettersScore(char guess){ //return the score the player earned based on how letters it fills (Must use with isLetterCorrect in GameRoom)
+        //modified to set 2x multipler if guess was lettercheck     cms27  12/12/2023
         char[] explodedCurrentWord = currentWord.toCharArray(); //sets another char array as a comparason to blank word array
         int amount = 0;
         int scoreMulti = 1;

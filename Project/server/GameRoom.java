@@ -108,7 +108,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         players.values().stream().filter(p -> p.getClient().getClientId() == client.getClientId()).findFirst()
                 .ifPresent(p -> {
                     p.setReady(true);
-                    p.setIsSpectating(false);
+                    p.setIsSpectating(false); //to not mark as a spectator  cms27 12/12/23
                     logger.info(String.format("Marked player %s[%s] as ready", p.getClient().getClientName(), p
                             .getClient().getClientId()));
                     syncReadyStatus(p.getClient().getClientId());
@@ -140,7 +140,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         }
     }
 
-    protected void setHardMode(ServerThread client) {
+    protected void setHardMode(ServerThread client) { //sets wantHardMode to client   cms27 12/12/23
         logger.info(TextFX.colorize("Hard Mode request triggered", Color.PURPLE));
         if (currentPhase != Phase.READY) {
             logger.warning(String.format("setHardMode incorrect phase: %s", Phase.READY.name()));
@@ -159,13 +159,13 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                 });
     }
 
-    private void checkHardMode() {
+    private void checkHardMode() { //checks if enough players want to enable Hard Mode
         long numWantHardMode = players.values().stream().filter(ServerPlayer::wantsHardMode).count();
-        if (numWantHardMode > 4 || numWantHardMode >= players.size()) {
+        if (numWantHardMode > 4 || numWantHardMode >= players.size()) { //If # of wants is at least 4 or is the amount of total players in gameroom
             logger.info(TextFX.colorize("Hard Mode enabled", Color.PURPLE));
             isHardMode = true;
             sendMessage(null, "Hard Mode is now Enabled");
-        } else {
+        } else { //sends amount of requests needed to enable Forgive option
             int numLeft = 4;
             if (players.size() < 4) {
                 numLeft = players.size();
@@ -175,7 +175,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     }
 
-    protected void setForgiveOption(ServerThread client) {
+    protected void setForgiveOption(ServerThread client) { //sets wantForgiveOption to client   cms27 12/12/23
         logger.info(TextFX.colorize("Forgive option request triggered", Color.PURPLE));
         if (currentPhase != Phase.READY) {
             logger.warning(String.format("setForgiveOption incorrect phase: %s", Phase.READY.name()));
@@ -194,13 +194,13 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                 });
     }
 
-    private void checkForgiveOption() {
+    private void checkForgiveOption() { //checks if enough players want to enable Forgive Option
         long numWantForgiveOption = players.values().stream().filter(ServerPlayer::wantsForgiveOp).count();
-        if (numWantForgiveOption > 4 || numWantForgiveOption >= players.size()) {
+        if (numWantForgiveOption > 4 || numWantForgiveOption >= players.size()) { //If # of wants is at least 4 or is the amount of total players in gameroom
             logger.info(TextFX.colorize("Forgive Option enabled", Color.PURPLE));
             forgiveOption = true;
             sendMessage(null, "Forgive Option is now Enabled");
-        } else {
+        } else { //sends amount of requests needed to enable Forgive option
             int numLeft = 4;
             if (players.size() < 4) {
                 numLeft = players.size();
@@ -421,7 +421,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         return rs;
     }
 
-    private void syncSpectators(List<ServerPlayer> spectators) {
+    private void syncSpectators(List<ServerPlayer> spectators) { //syncs spectators list to all clients     cms27 12/12/23
         String[] sl = new String[spectators.size()];
         Iterator<ServerPlayer> specIter = spectators.iterator();
         int index = 0;
@@ -520,7 +520,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
 
     }
 
-    private void updateSpectatorList() {
+    private void updateSpectatorList() { //refreshes spectators list    cms27 12/12/23
         spectators = players.values().stream().filter(ServerPlayer::isSpectating).toList();
         syncSpectators(spectators);
     }
@@ -530,11 +530,22 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         return p.isSpectating();
     }
 
-    //guessing handling methods cms27 11/13/2023 reworked on 11/29/23
+    protected boolean isClientAway(ServerThread client) {
+        ServerPlayer p = findPlayer(client);
+        return p.getAwayStatus();
+    }
+
+
+
+    //guessing handling methods cms27 11/13/2023 reworked on 11/29/23 modfied on 12/12/23
 
     protected void handleGuessLetter(String guess, ServerThread client) { //cms27 11/14/2023
         if(isClientSpectating(client)) {
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while spectating");
+            return;
+        }
+        if(isClientAway(client)) {
+            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while marked away");
             return;
         }
         if(client.getClientId() != currentTurnPlayer.getClient().getClientId()){ //sends a msg back if its not the player's turn (compares from currentTurnPlayer )
@@ -556,7 +567,7 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             return;
         } 
         sendMessage(null, client.getClientName() + " guessed the letter " + letter); 
-        if (game.isLetterCorrect(letter)){
+        if (game.isLetterCorrect(letter)){ //modified 12/12/23  cms27
             cancelReadyTimer(); //stops any timer
             sendMessage(null, client.getClientName() + " got the letter right!");
             guessedLetters.add(Letter);
@@ -564,10 +575,11 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             syncLetterStat(guess,true);
             checkExtraPoint(letter);
             scorePlayer(currentTurnPlayer, game.guessedLettersScore(letter));//scores the player
-            if (forgiveOption) {
+            if (forgiveOption && game.getHangmanStrikes() > 0) { //will only remove a strike if forgiveOption is true & if there is at least 1 or more strikes.
                 game.removeOneStrike();
                 syncStrike(game.getHangmanStrikes());
                 sendMessage(null, "One Strike has been removed");
+                sendMessage(null, "Strikes:" + game.getHangmanStrikes());
             }
             if (!checkIsPlayerWon()) {//checks if the max score win condition has been achieved
                 sendMessage(null, "New Blank Word: " + game.getBlankStr());  //Sends out a new blank to clients
@@ -594,6 +606,10 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
     protected void handleGuessWord(String guess, ServerThread client) { //cms27 11/14/2023 reworked on 11/29/23
         if(isClientSpectating(client)) {
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while spectating");//sends a msg back if a client tries to guess as a spectator
+            return;
+        }
+        if(isClientAway(client)) {
+            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while marked away");
             return;
         }
         if(client.getClientId() != currentTurnPlayer.getClient().getClientId()){
@@ -637,6 +653,10 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while spectating");
             return;
         }
+        if(isClientAway(client)) {
+            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot perform actions while marked away");
+            return;
+        }
         if(client.getClientId() != currentTurnPlayer.getClient().getClientId()){
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You cannot skip a turn that is not yours");
             return;
@@ -651,15 +671,16 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         nextTurn();
     }
 
-    protected void handleAway(ServerThread client) {
+    protected void handleAway(ServerThread client) { //toggles Away Status of a client  cms27   12/12/23
         if(isClientSpectating(client)) {
             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You're cannot perform actions as a spectator");
             return;
         }
         logger.info(TextFX.colorize(client.getClientName() + " invoked  handleMarkAway", Color.YELLOW));
         ServerPlayer player = findPlayer(client);
-        if (!player.getAwayStatus()) {
+        if (!player.getAwayStatus()) { //if player is not already marked away, set Away to true
             player.setAwayStatus(true);
+            client.sendAway(client.getClientId());//sends away paylaod to client
             sendMessage(null, client.getClientName() + " marked themselves away");
             rankPlayers(turnOrder); //used to display away status to clients
             if(client.getClientId() == currentTurnPlayer.getClient().getClientId()){
@@ -669,8 +690,9 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
                 nextTurn();
             }
 
-        } else {
+        } else { //else unmark player (set Away to false);
             player.setAwayStatus(false);
+            client.sendAway(client.getClientId());//sends away payload to client
             sendMessage(null, client.getClientName() + " is back");
             rankPlayers(turnOrder);
         }
@@ -687,12 +709,13 @@ public class GameRoom extends Room { //Added parts from Ready Check     Cristian
         return true;  
     }
 
-    protected void checkExtraPoint(char letter) {
+    protected void checkExtraPoint(char letter) {// used in handle guess letter to annouce if a player earned extra points  cms27 12/12/2023
         char[] letterCheckArr = Constants.HANGMAN_EXTRA_POINTS_LETTER_LIST;
         for (int i = 0; i < letterCheckArr.length; i++) {
             if (letter == letterCheckArr[i]) {
-                sendMessage(null, currentTurnPlayer.getClient().getClientName() + "guessed a uncommon letter");
+                sendMessage(null, currentTurnPlayer.getClient().getClientName() + " guessed a uncommon letter");
                 sendMessage(null, "They're getting double points");
+                break;
             }
         }
     }

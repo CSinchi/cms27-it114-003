@@ -1,6 +1,6 @@
 package Project.common;
 
-//Added from Ready Check     Cristian Sinchi cms27
+//Added from Ready Check     Cristian Sinchi cms27  modified 12/12/2023
 public class Player {
 
     private boolean isReady = false;

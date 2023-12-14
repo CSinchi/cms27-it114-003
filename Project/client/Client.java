@@ -38,7 +38,7 @@ public enum Client {
     private long myClientId = Constants.DEFAULT_CLIENT_ID;
     private static Logger logger = Logger.getLogger(Client.class.getName());
 
-    private boolean isMarkedAway = false;
+    public boolean isMarkedAway = false;
 
     private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
@@ -335,6 +335,23 @@ public enum Client {
                 }
                 });
                  
+                break;
+            case AWAY:
+                System.out.println(String.format(TextFX.colorize("Away Player: %s",Color.PURPLE), getClientNameById(p.getClientId())));
+               
+                if (myClientId == p.getClientId()) {
+                    if (!isMarkedAway) {
+                        isMarkedAway = true;
+                    } else {
+                        isMarkedAway = false;
+                    }
+                }
+                events.forEach(e -> { 
+                if (e instanceof IGameEvents) {
+                    ((IGameEvents) e).onReceiveAway();
+                }
+                }); 
+
                 break;
             
             case TIME: //New Payload handling methods for GamePanel UI  cms27 11/27/23

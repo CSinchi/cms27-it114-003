@@ -135,6 +135,13 @@ public class ServerThread extends Thread {
         return send(p);
     }
 
+    public boolean sendAway(long clientId) {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.AWAY);
+        p.setClientId(clientId);
+        return send(p);
+    }
+
     public boolean sendRoomName(String name) { 
         Payload p = new Payload();
         p.setPayloadType(PayloadType.JOIN_ROOM);
@@ -262,11 +269,14 @@ public class ServerThread extends Thread {
             case DISCONNECT:
                 Room.disconnectClient(this, getCurrentRoom());
                 break;
-            case MESSAGE:
+            case MESSAGE: //will reject any msg from a spectator or client marked as away while not in READY Phase      cms27@njit.edu  12/12/23
                 if (currentRoom != null) {
                     if(currentRoom.getName() != Constants.LOBBY) {
                         if (((GameRoom) currentRoom).isClientSpectating(this) && ((GameRoom) currentRoom).currentPhase != Phase.READY ) {
                             sendMessage(Constants.DEFAULT_CLIENT_ID, "You're not allowed to send messages while spectating");
+                        }
+                        else if (((GameRoom) currentRoom).isClientAway(this) && ((GameRoom) currentRoom).currentPhase != Phase.READY ) {
+                            sendMessage(Constants.DEFAULT_CLIENT_ID, "You're not allowed to send messages while away");
                         }
                         else {
                             currentRoom.sendMessage(this, p.getMessage());

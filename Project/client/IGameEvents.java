@@ -38,4 +38,6 @@ public interface IGameEvents extends IClientEvents {
     void onReceiveStrike(String strike);
 
     void onReceiveSpectators(String[] spectators);
+
+    void onReceiveAway();
 }
